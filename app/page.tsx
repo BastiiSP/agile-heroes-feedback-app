@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PROGRAMS, buildSteps, type RatingId, type OpenQuestionId } from "@/lib/constants";
-import type { FeedbackEntry, FeedbackItem, Ratings, FollowUps, OpenAnswers } from "@/lib/types";
+import type { FeedbackEntry, FeedbackItem, Ratings, FollowUps, OpenAnswers, Trainer } from "@/lib/types";
 import FeedbackWizard from "@/components/FeedbackWizard";
 import ConfirmView from "@/components/ConfirmView";
 import ThanksView from "@/components/ThanksView";
@@ -22,7 +22,7 @@ export default function Page() {
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [selectedTrainer, setSelectedTrainer] = useState("");
-  const [trainerList, setTrainerList] = useState<string[]>([]);
+  const [trainerList, setTrainerList] = useState<Trainer[]>([]);
   const [loadingTrainers, setLoadingTrainers] = useState(false);
   const [trainerPassword, setTrainerPassword] = useState("");
   const [trainerError, setTrainerError] = useState(false);
@@ -42,7 +42,7 @@ export default function Page() {
       setLoadingTrainers(true);
       try {
         const res = await fetch("/api/trainers");
-        const list = (await res.json()) as string[];
+        const list = (await res.json()) as Trainer[];
         if (active) setTrainerList(list);
       } catch {
         if (active) setTrainerList([]);

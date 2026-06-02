@@ -1,19 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { C } from "@/lib/constants";
 import { inpStyle, modBtn } from "@/lib/styles";
+import type { Trainer } from "@/lib/types";
+
+// Vollname oben, optionaler Rufname darunter dezent in Anführungszeichen.
+// Wird in der Trefferliste und im angepinnten Button wiederverwendet.
+function TrainerLabel({ t, sel }: { t: Trainer; sel: boolean }) {
+  return (
+    <span style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1.25 }}>
+      <span>{t.name}</span>
+      {t.rufname && (
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: 600,
+            marginTop: "2px",
+            color: sel ? "rgba(255,255,255,0.8)" : C.muted,
+          }}
+        >
+          &ldquo;{t.rufname}&rdquo;
+        </span>
+      )}
+    </span>
+  );
+}
 
 // Suchbarer Trainer-Picker für 20+ wachsende Einträge: Filter-Eingabe +
 // scrollbare, gefilterte Trefferliste. Verhindert „Trainer nicht gefunden"-
-// Abbrüche und ersetzt die flache Button-Reihe.
+// Abbrüche und ersetzt die flache Button-Reihe. Die Suche schlägt auf Vollname
+// UND optionalen Rufname an; ausgewählt/gespeichert wird stets der Vollname.
 export default function TrainerPicker({
   trainers,
   selected,
   onSelect,
   loading,
 }: {
-  trainers: string[];
+  trainers: Trainer[];
   selected: string;
-  onSelect: (t: string) => void;
+  onSelect: (name: string) => void;
   loading: boolean;
 }) {
   const [query, setQuery] = useState("");
@@ -23,7 +47,9 @@ export default function TrainerPicker({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return trainers;
-    return trainers.filter((t) => t.toLowerCase().includes(q));
+    return trainers.filter(
+      (t) => t.name.toLowerCase().includes(q) || (t.rufname?.toLowerCase().includes(q) ?? false)
+    );
   }, [trainers, query]);
 
   // Aktives (per Tastatur markiertes) Item in den sichtbaren Bereich scrollen.
@@ -43,7 +69,7 @@ export default function TrainerPicker({
     } else if (e.key === "Enter") {
       if (activeIndex >= 0 && activeIndex < filtered.length) {
         e.preventDefault();
-        onSelect(filtered[activeIndex]);
+        onSelect(filtered[activeIndex].name);
       }
     } else if (e.key === "Escape") {
       setQuery("");
@@ -79,8 +105,12 @@ export default function TrainerPicker({
   }
 
   // Gewähltes Item, das durch die Suche herausgefiltert wurde, oben anpinnen,
-  // damit die Auswahl sichtbar bleibt.
-  const pinnedSelected = selected && !filtered.includes(selected) ? selected : null;
+  // damit die Auswahl sichtbar bleibt. Das volle Trainer-Objekt holen, damit der
+  // Rufname auch im angepinnten Button erscheint.
+  const pinnedTrainer =
+    selected && !filtered.some((t) => t.name === selected)
+      ? trainers.find((t) => t.name === selected) ?? { name: selected }
+      : null;
 
   return (
     <div>
@@ -96,10 +126,10 @@ export default function TrainerPicker({
         }}
         onKeyDown={handleKeyDown}
       />
-      {pinnedSelected && (
+      {pinnedTrainer && (
         <div style={{ marginTop: "10px" }}>
-          <button data-trainer style={modBtn(true)} onClick={() => onSelect(pinnedSelected)}>
-            {pinnedSelected}
+          <button data-trainer style={modBtn(true)} onClick={() => onSelect(pinnedTrainer.name)}>
+            <TrainerLabel t={pinnedTrainer} sel />
           </button>
         </div>
       )}
@@ -122,16 +152,16 @@ export default function TrainerPicker({
         >
           {filtered.map((t, i) => (
             <button
-              key={t}
+              key={t.name}
               data-trainer
               style={{
-                ...modBtn(selected === t),
-                ...(i === activeIndex && selected !== t ? { border: "1px solid " + C.teal } : null),
+                ...modBtn(selected === t.name),
+                ...(i === activeIndex && selected !== t.name ? { border: "1px solid " + C.teal } : null),
               }}
-              onClick={() => onSelect(t)}
+              onClick={() => onSelect(t.name)}
               onMouseEnter={() => setActiveIndex(i)}
             >
-              {t}
+              <TrainerLabel t={t} sel={selected === t.name} />
             </button>
           ))}
         </div>

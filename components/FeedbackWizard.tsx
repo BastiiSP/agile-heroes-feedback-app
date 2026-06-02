@@ -8,7 +8,7 @@ import {
   type OpenQuestionId,
 } from "@/lib/constants";
 import { wrap, card, lbl, qst, fup, taStyle, inpStyle, btnPrimary, ghost, modBtn } from "@/lib/styles";
-import type { Ratings, FollowUps, OpenAnswers } from "@/lib/types";
+import type { Ratings, FollowUps, OpenAnswers, Trainer } from "@/lib/types";
 import Screen from "./Screen";
 import AHILogo from "./AHILogo";
 import ProgressBar from "./ProgressBar";
@@ -52,7 +52,7 @@ export default function FeedbackWizard({
   onSelectModule: (m: string) => void;
   selectedTrainer: string;
   setSelectedTrainer: (t: string) => void;
-  trainerList: string[];
+  trainerList: Trainer[];
   loadingTrainers: boolean;
   ratings: Ratings;
   onRateChange: (id: RatingId, value: number) => void;

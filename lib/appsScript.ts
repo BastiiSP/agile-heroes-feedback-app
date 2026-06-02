@@ -3,7 +3,7 @@
 // den Server nie. server-to-server entfällt jede CORS-Problematik.
 
 import "server-only";
-import type { FeedbackEntry, FeedbackItem } from "./types";
+import type { FeedbackEntry, FeedbackItem, Trainer } from "./types";
 
 function gasUrl(): string {
   const url = process.env.GOOGLE_APPS_SCRIPT_URL;
@@ -15,11 +15,23 @@ function gasUrl(): string {
 
 // Vollständige Trainerliste laden (modul-unabhängig).
 // Das Apps Script liefert seit dem Trainer-Blatt-Umbau bei `getTrainers` die
-// gesamte, deduplizierte Namensliste (der `modul`-Parameter wird ignoriert).
-export async function getTrainers(): Promise<string[]> {
+// gesamte, deduplizierte Liste (der `modul`-Parameter wird ignoriert).
+// Defensiv normalisiert: akzeptiert sowohl die alte reine Namensliste
+// (`string[]`) als auch die neue Form mit Rufname (`{name, rufname}[]` bzw.
+// `{Trainer, Rufname}[]`). So ist die Reihenfolge von Deploy und GAS-Umbau egal.
+export async function getTrainers(): Promise<Trainer[]> {
   const res = await fetch(gasUrl() + "?action=getTrainers", { cache: "no-store" });
-  const list = (await res.json()) as string[];
-  return [...list].sort((a, b) => a.localeCompare(b, "de"));
+  const raw = (await res.json()) as unknown[];
+  const list: Trainer[] = raw
+    .map((entry) => {
+      if (typeof entry === "string") return { name: entry.trim() };
+      const o = entry as Record<string, string>;
+      const name = (o.name ?? o.Trainer ?? "").trim();
+      const rufname = (o.rufname ?? o.Rufname ?? "").trim();
+      return rufname ? { name, rufname } : { name };
+    })
+    .filter((t) => t.name);
+  return list.sort((a, b) => a.name.localeCompare(b.name, "de"));
 }
 
 // Feedback einreichen. Ersetzt den ursprünglichen Image-Beacon durch einen

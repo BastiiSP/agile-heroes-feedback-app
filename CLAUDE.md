@@ -21,7 +21,7 @@ Eine Feedback-App für Trainings und Ausbildungen bei Agile Heroes Intelligence.
 
 Der Browser spricht **nie direkt** mit Google Apps Script, sondern nur mit den eigenen API-Routen unter `app/api/`. Diese rufen das Apps Script serverseitig auf (`lib/appsScript.ts`). Dadurch bleiben `GOOGLE_APPS_SCRIPT_URL` und `TRAINER_PASSWORD` echte Server-Secrets und tauchen nie im Client-Bundle auf.
 
-- `GET  /api/trainers` → **vollständige** Trainerliste (modul-unabhängig). Das Apps Script liefert bei `getTrainers` die gesamte, deduplizierte Namensliste aus dem Tab „Trainer" (eine Spalte; der `modul`-Parameter wird ignoriert). `getTrainers()` in `lib/appsScript.ts` macht dafür **einen** Aufruf.
+- `GET  /api/trainers` → **vollständige** Trainerliste (modul-unabhängig) als `Trainer[]` (`{ name, rufname? }`). Das Apps Script liefert bei `getTrainers` die gesamte, deduplizierte Liste aus dem Tab „Trainer" (Spalte A = Vollname, optionale Spalte B „Rufname"; der `modul`-Parameter wird ignoriert). `getTrainers()` in `lib/appsScript.ts` macht dafür **einen** Aufruf und normalisiert defensiv: alte reine Namenslisten (`string[]`) werden weiterhin akzeptiert. Der Rufname dient nur Suche + Anzeige im `TrainerPicker`; gespeichert/gesendet wird stets der Vollname.
 - `POST /api/feedback` → Feedback einreichen (server-to-server, awaited); Payload enthält `ausbildung`
 
 - `POST /api/trainer` → Passwort serverseitig prüfen, bei Erfolg alle Feedbacks geparst zurückgeben (401 bei falschem Passwort)
