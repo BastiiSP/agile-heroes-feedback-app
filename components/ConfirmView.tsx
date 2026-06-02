@@ -1,0 +1,47 @@
+import { C } from "@/lib/constants";
+import { wrap, ghost, btnPrimary } from "@/lib/styles";
+import Screen from "./Screen";
+import AHILogo from "./AHILogo";
+
+export default function ConfirmView({
+  submitting,
+  onBack,
+  onSubmit,
+}: {
+  submitting: boolean;
+  onBack: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <Screen>
+      <div style={{ ...wrap, textAlign: "center", paddingTop: "80px" }}>
+        <AHILogo />
+        <div style={{ marginBottom: "28px" }}>
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 2L11 13" stroke="#e8c07a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#e8c07a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <span style={{ fontSize: "10px", fontWeight: 800, color: C.gold, letterSpacing: "2px", textTransform: "uppercase" }}>Letzter Schritt</span>
+        <h1 style={{ fontSize: "26px", fontWeight: 800, margin: "12px 0 16px" }}>Bereit zum Absenden?</h1>
+        <p style={{ fontSize: "16px", color: C.muted, lineHeight: "1.7", maxWidth: "400px", margin: "0 auto 16px" }}>
+          Dein Feedback ist vollständig. Ein Klick, und du machst die Ausbildung besser.
+        </p>
+        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.2)", marginBottom: "40px" }}>
+          Du kannst auch nochmal zurückgehen und etwas anpassen.
+        </p>
+        <div style={{ display: "flex", gap: "14px", justifyContent: "center" }}>
+          <button style={ghost} onClick={onBack}>Zurück</button>
+          <button
+            className="pulse"
+            style={{ ...btnPrimary(C.gold, submitting), padding: "16px 40px", fontSize: "16px", borderRadius: "10px" }}
+            onClick={onSubmit}
+            disabled={submitting}
+          >
+            {submitting ? "Wird gesendet..." : "Feedback absenden"}
+          </button>
+        </div>
+      </div>
+    </Screen>
+  );
+}
