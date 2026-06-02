@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { RATINGS, OPEN_QUESTIONS, type RatingId, type OpenQuestionId } from "@/lib/constants";
+import { useEffect, useMemo, useState } from "react";
+import { PROGRAMS, buildSteps, type RatingId, type OpenQuestionId } from "@/lib/constants";
 import type { FeedbackEntry, FeedbackItem, Ratings, FollowUps, OpenAnswers } from "@/lib/types";
 import FeedbackWizard from "@/components/FeedbackWizard";
 import ConfirmView from "@/components/ConfirmView";
@@ -14,6 +14,7 @@ type View = "form" | "confirm" | "thanks" | "trainer-login" | "trainer";
 export default function Page() {
   const [view, setView] = useState<View>("form");
   const [step, setStep] = useState(0);
+  const [selectedProgram, setSelectedProgram] = useState("");
   const [selectedModule, setSelectedModule] = useState("");
   const [ratings, setRatings] = useState<Ratings>({ inhalt: 0, didaktik: 0, gestaltung: 0, trainer: 0 });
   const [followUps, setFollowUps] = useState<FollowUps>({ inhalt: "", didaktik: "", gestaltung: "", trainer: "" });
@@ -26,29 +27,54 @@ export default function Page() {
   const [trainerPassword, setTrainerPassword] = useState("");
   const [trainerError, setTrainerError] = useState(false);
   const [feedbackData, setFeedbackData] = useState<FeedbackItem[]>([]);
+  const [filterAusbildung, setFilterAusbildung] = useState("all");
   const [filterModule, setFilterModule] = useState("all");
   const [filterTrainer, setFilterTrainer] = useState("all");
   const [loadingData, setLoadingData] = useState(false);
 
+  const program = useMemo(() => PROGRAMS.find((p) => p.id === selectedProgram), [selectedProgram]);
+  const steps = useMemo(() => buildSteps(program), [program]);
+
+  // Trainer einmalig beim Laden holen – modul-unabhängig, für alle Pfade.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setLoadingTrainers(true);
+      try {
+        const res = await fetch("/api/trainers");
+        const list = (await res.json()) as string[];
+        if (active) setTrainerList(list);
+      } catch {
+        if (active) setTrainerList([]);
+      }
+      if (active) setLoadingTrainers(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const canProceed = () => {
-    if (step === 0) return selectedModule !== "";
-    if (step === 1) return selectedTrainer !== "";
-    if (step >= 2 && step <= 5) {
-      const r = RATINGS[step - 2];
-      if (ratings[r.id] === 0) return false;
-      return followUps[r.id].trim() !== "";
+    const current = steps[step];
+    switch (current.kind) {
+      case "program":
+        return selectedProgram !== "";
+      case "module":
+        return selectedModule !== "";
+      case "trainer":
+        return selectedTrainer !== "";
+      case "rating":
+        return ratings[current.rating.id] > 0 && followUps[current.rating.id].trim() !== "";
+      case "open":
+        return openAnswers[current.question.id].trim() !== "";
+      case "name":
+        return true;
     }
-    if (step >= 6 && step <= 8) return openAnswers[OPEN_QUESTIONS[step - 6].id].trim() !== "";
-    return true;
   };
 
   const handleNext = () => {
     if (!canProceed()) return;
-    if (step === 0) {
-      setStep(1);
-      return;
-    }
-    if (step === 9) setView("confirm");
+    if (step === steps.length - 1) setView("confirm");
     else setStep((s) => s + 1);
   };
 
@@ -58,29 +84,20 @@ export default function Page() {
 
   const resetForm = () => {
     setStep(0);
+    setSelectedProgram("");
     setSelectedModule("");
     setName("");
     setSelectedTrainer("");
-    setTrainerList([]);
     setRatings({ inhalt: 0, didaktik: 0, gestaltung: 0, trainer: 0 });
     setFollowUps({ inhalt: "", didaktik: "", gestaltung: "", trainer: "" });
     setOpenAnswers({ erkenntnis: "", ausprobieren: "", takeaway: "" });
     setView("form");
   };
 
-  // Modulauswahl (Step 0): Trainerliste serverseitig laden.
-  const handleSelectModule = async (m: string) => {
-    setSelectedModule(m);
-    setSelectedTrainer("");
-    setLoadingTrainers(true);
-    try {
-      const res = await fetch("/api/trainers?modul=" + encodeURIComponent(m));
-      const list = (await res.json()) as string[];
-      setTrainerList(list);
-    } catch {
-      setTrainerList([]);
-    }
-    setLoadingTrainers(false);
+  // Ausbildungswahl: Modulwahl zurücksetzen (relevant bei Wechsel zw. Pfaden).
+  const handleSelectProgram = (id: string) => {
+    setSelectedProgram(id);
+    setSelectedModule("");
   };
 
   const handleRateChange = (id: RatingId, value: number) => {
@@ -92,6 +109,7 @@ export default function Page() {
     setSubmitting(true);
     const entry: FeedbackEntry = {
       id: Date.now(),
+      ausbildung: program?.label || "",
       module: selectedModule,
       trainer: selectedTrainer,
       name: name.trim() || "Anonym",
@@ -148,7 +166,7 @@ export default function Page() {
         submitting={submitting}
         onBack={() => {
           setView("form");
-          setStep(8);
+          setStep(steps.length - 1);
         }}
         onSubmit={handleSubmit}
       />
@@ -172,6 +190,8 @@ export default function Page() {
     return (
       <TrainerDashboard
         feedbackData={feedbackData}
+        filterAusbildung={filterAusbildung}
+        setFilterAusbildung={setFilterAusbildung}
         filterModule={filterModule}
         setFilterModule={setFilterModule}
         filterTrainer={filterTrainer}
@@ -181,6 +201,7 @@ export default function Page() {
         onLogout={() => {
           setView("form");
           setTrainerPassword("");
+          setFilterAusbildung("all");
           setFilterModule("all");
           setFilterTrainer("all");
         }}
@@ -189,9 +210,12 @@ export default function Page() {
 
   return (
     <FeedbackWizard
+      steps={steps}
       step={step}
+      selectedProgram={selectedProgram}
+      onSelectProgram={handleSelectProgram}
       selectedModule={selectedModule}
-      onSelectModule={handleSelectModule}
+      onSelectModule={setSelectedModule}
       selectedTrainer={selectedTrainer}
       setSelectedTrainer={setSelectedTrainer}
       trainerList={trainerList}

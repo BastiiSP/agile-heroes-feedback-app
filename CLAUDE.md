@@ -2,7 +2,7 @@
 
 ## Was ist dieses Projekt?
 
-Eine Feedback-App für Trainings und Ausbildungen bei Agile Heroes Intelligence (aktuell primär für die KI-Manager Ausbildung / KIMA). Teilnehmer geben nach jedem Modul Feedback zu Inhalten, Didaktik, Gestaltung und Trainer. Die Ergebnisse sind über einen passwortgeschützten Trainer-Bereich einsehbar.
+Eine Feedback-App für Trainings und Ausbildungen bei Agile Heroes Intelligence. Teilnehmer wählen zuerst ihre **Ausbildung** (aktuell *KI-Manager Ausbildung / KIMA* mit Modulen und *AI Automation Engineer / AIAE* ohne Module) und geben dann Feedback zu Inhalten, Didaktik, Gestaltung und Trainer. Die Ergebnisse sind über einen passwortgeschützten Trainer-Bereich einsehbar.
 
 **GitHub:** https://github.com/BastiiSP/agile-heroes-feedback-app
 **Trainerpasswort:** liegt als Umgebungsvariable `TRAINER_PASSWORD` (nicht im Code).
@@ -21,8 +21,9 @@ Eine Feedback-App für Trainings und Ausbildungen bei Agile Heroes Intelligence 
 
 Der Browser spricht **nie direkt** mit Google Apps Script, sondern nur mit den eigenen API-Routen unter `app/api/`. Diese rufen das Apps Script serverseitig auf (`lib/appsScript.ts`). Dadurch bleiben `GOOGLE_APPS_SCRIPT_URL` und `TRAINER_PASSWORD` echte Server-Secrets und tauchen nie im Client-Bundle auf.
 
-- `GET  /api/trainers?modul=X` → Trainerliste für ein Modul
-- `POST /api/feedback` → Feedback einreichen (server-to-server, awaited)
+- `GET  /api/trainers` → **vollständige** Trainerliste (modul-unabhängig). Wichtig: Das Apps Script kennt keinen „alle Trainer"-Modus und filtert immer pro Modul; `getTrainers()` in `lib/appsScript.ts` fragt deshalb **alle `MODULES` parallel ab und vereint die Namen dedupliziert**. GAS bleibt dadurch unverändert.
+- `POST /api/feedback` → Feedback einreichen (server-to-server, awaited); Payload enthält `ausbildung`
+
 - `POST /api/trainer` → Passwort serverseitig prüfen, bei Erfolg alle Feedbacks geparst zurückgeben (401 bei falschem Passwort)
 
 ## Umgebungsvariablen
@@ -46,12 +47,13 @@ app/
   icon.svg            # Favicon (AHI-Logo)
   api/
     trainers/route.ts  feedback/route.ts  trainer/route.ts
-components/           # Screen, MeshBg, NetworkLines, TrainerIcon, StarRating, ProgressBar, AHILogo,
-                      # FeedbackWizard, ConfirmView, ThanksView, TrainerLogin, TrainerDashboard
+components/           # Screen, MeshBg, NetworkLines, TrainerIcon, StarRating, ProgressBar, TopicNav, AHILogo,
+                      # FeedbackWizard, TrainerPicker, ConfirmView, ThanksView, TrainerLogin, TrainerDashboard
 lib/
-  constants.ts   # MODULES, RATINGS, OPEN_QUESTIONS, C (Farben), stepColor(), TOTAL_STEPS
+  constants.ts   # MODULES, PROGRAMS (KIMA/AIAE inkl. eigener Fragesätze), Step-Typen + buildSteps(),
+                 # phaseOf()/phaseColor()/stepColorForKind(), C (Farben)
   styles.ts      # geteilte Inline-Style-Objekte
-  types.ts       # FeedbackEntry, FeedbackItem, Ratings, FollowUps, OpenAnswers
+  types.ts       # FeedbackEntry, FeedbackItem (inkl. ausbildung), Ratings, FollowUps, OpenAnswers
   appsScript.ts  # server-only: getTrainers/submitFeedback/loadFeedback inkl. dt. Spalten-Mapping
 public/ahi-logo.svg  # Logo für den Header
 ```
@@ -60,12 +62,15 @@ public/ahi-logo.svg  # Logo für den Header
 
 **Views** (`view`-State in `app/page.tsx`): `form` | `confirm` | `thanks` | `trainer-login` | `trainer`.
 
-**Formular-Schritte (Wizard, Steps 0–9, `TOTAL_STEPS = 10`):**
-- Step 0: Kurs auswählen (aus `MODULES`) – lädt Trainerliste
-- Step 1: Trainer auswählen
-- Steps 2–5: Bewertungen (Sterne + Follow-up-Fragen) aus `RATINGS`
-- Steps 6–8: Offene Fragen aus `OPEN_QUESTIONS`
-- Step 9: Name eingeben (optional) → confirm → thanks
+**Formular-Schritte (Wizard):** Die Schrittfolge ist **nicht mehr fest indexiert**, sondern wird per `buildSteps(program)` aus dem State abgeleitet (Step-Deskriptoren mit `kind`: `program | module | trainer | rating | open | name`). `step` ist der Index in dieses Array; `canProceed()` und das Rendering in `FeedbackWizard` schalten auf `steps[step].kind`.
+- `program`: Ausbildung auswählen (aus `PROGRAMS`)
+- `module`: Modul auswählen (aus `program.modules`) – **entfällt automatisch, wenn die Ausbildung keine Module hat** (z.B. AIAE)
+- `trainer`: Trainer auswählen über die suchbare Liste (`TrainerPicker`, lädt alle Trainer einmalig beim Mount)
+- `rating` (×4): Bewertungen (Sterne + Follow-up) aus `program.ratings`
+- `open` (×3): Offene Fragen aus `program.openQuestions`
+- `name`: Name eingeben (optional) → confirm → thanks
+
+Eigene Module/Module für AIAE später = `modules`-Array in `PROGRAMS` füllen, sonst nichts. Die `TopicNav` (Themen-Leiste) und `ProgressBar` leiten sich beide aus dem `steps`-Array + `phaseOf()` ab. Bewertungs-/Fragetexte sind pro Ausbildung in `lib/constants.ts` definiert (`KIMA_RATINGS`/`KIMA_OPEN` vs. `AIAE_RATINGS`/`AIAE_OPEN`); die IDs bleiben identisch, nur die Anzeigetexte unterscheiden sich.
 
 ## Design-System
 
@@ -83,6 +88,7 @@ public/ahi-logo.svg  # Logo für den Header
 
 - `GOOGLE_APPS_SCRIPT_URL` (Env) – nie ändern, sonst bricht die gesamte Datenanbindung
 - Die deutschen Spaltennamen im Mapping in `lib/appsScript.ts` (`"Inhalte ★"` etc.) – müssen zum Sheet passen
+- **Offen/Backend:** Der `ausbildung`-Wert wird zwar mitgesendet und beim Laden aus der Spalte `"Ausbildung"` gemappt, aber das Apps Script + Sheet müssen diese Spalte noch schreiben/zurückliefern. Bis dahin bleibt der Ausbildungs-Filter im Dashboard leer (Einreichung funktioniert trotzdem)
 - Das Design-System (Farben, Fonts, Abstände, Inline-Styles) – ist bewusst so
 - Der Mesh-Hintergrund (`MeshBg`, `NetworkLines`) – rein dekorativ, stabil lassen
 - Die Passwortlogik im Route Handler `app/api/trainer/route.ts` (serverseitiger Check)

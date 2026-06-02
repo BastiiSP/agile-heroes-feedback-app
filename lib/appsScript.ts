@@ -3,6 +3,7 @@
 // den Server nie. server-to-server entfällt jede CORS-Problematik.
 
 import "server-only";
+import { MODULES } from "./constants";
 import type { FeedbackEntry, FeedbackItem } from "./types";
 
 function gasUrl(): string {
@@ -13,14 +14,29 @@ function gasUrl(): string {
   return url;
 }
 
-// Trainerliste für ein Modul laden.
-export async function getTrainers(modul: string): Promise<string[]> {
-  const res = await fetch(
-    gasUrl() + "?action=getTrainers&modul=" + encodeURIComponent(modul),
-    { cache: "no-store" }
+// Vollständige Trainerliste laden (modul-unabhängig).
+//
+// Hinweis: Das Apps Script kennt keinen „alle Trainer"-Modus – `getTrainers`
+// liefert ohne `modul` eine leere Liste und filtert sonst pro Modul. Damit das
+// Backend unverändert bleibt UND trotzdem alle Trainer geladen werden, fragen
+// wir hier alle Module parallel ab und vereinen die Namen (dedupliziert).
+export async function getTrainers(): Promise<string[]> {
+  const lists = await Promise.all(
+    MODULES.map(async (modul) => {
+      try {
+        const res = await fetch(
+          gasUrl() + "?action=getTrainers&modul=" + encodeURIComponent(modul),
+          { cache: "no-store" }
+        );
+        return (await res.json()) as string[];
+      } catch {
+        return [] as string[];
+      }
+    })
   );
-  const list = (await res.json()) as string[];
-  return [...list].sort((a, b) => a.localeCompare(b, "de"));
+  const all = new Set<string>();
+  lists.forEach((list) => list.forEach((t) => all.add(t)));
+  return [...all].sort((a, b) => a.localeCompare(b, "de"));
 }
 
 // Feedback einreichen. Ersetzt den ursprünglichen Image-Beacon durch einen
@@ -37,6 +53,7 @@ export async function loadFeedback(): Promise<FeedbackItem[]> {
   const rows = (await res.json()) as Record<string, string>[];
   const items: FeedbackItem[] = rows.map((obj, i) => ({
     id: i,
+    ausbildung: obj["Ausbildung"] || "",
     module: obj["Modul"] || "",
     trainer: obj["Trainer"] || "",
     name: obj["Name"] || "",

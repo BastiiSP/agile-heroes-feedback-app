@@ -1,11 +1,17 @@
-import { C, MODULES, RATINGS, type RatingId } from "@/lib/constants";
+import { C, MODULES, PROGRAMS, KIMA_RATINGS, type RatingId } from "@/lib/constants";
 import { wrap, card, ghost, modBtn } from "@/lib/styles";
 import type { FeedbackItem } from "@/lib/types";
 import Screen from "./Screen";
 import AHILogo from "./AHILogo";
 
+// Die Bewertungs-IDs/-Labels sind ausbildungsübergreifend identisch; KIMA_RATINGS
+// dient hier nur als Label-Quelle für die Auswertung.
+const RATING_LABELS = KIMA_RATINGS;
+
 export default function TrainerDashboard({
   feedbackData,
+  filterAusbildung,
+  setFilterAusbildung,
   filterModule,
   setFilterModule,
   filterTrainer,
@@ -15,6 +21,8 @@ export default function TrainerDashboard({
   onLogout,
 }: {
   feedbackData: FeedbackItem[];
+  filterAusbildung: string;
+  setFilterAusbildung: (a: string) => void;
   filterModule: string;
   setFilterModule: (m: string) => void;
   filterTrainer: string;
@@ -25,6 +33,7 @@ export default function TrainerDashboard({
 }) {
   const filtered = feedbackData.filter(
     (f) =>
+      (filterAusbildung === "all" || f.ausbildung === filterAusbildung) &&
       (filterModule === "all" || f.module === filterModule) &&
       (filterTrainer === "all" || f.trainer === filterTrainer)
   );
@@ -54,8 +63,23 @@ export default function TrainerDashboard({
           </button>
         </div>
         <h1 style={{ fontSize: "26px", fontWeight: 800, marginBottom: "6px" }}>Feedback-Auswertung</h1>
-        <p style={{ color: C.muted, fontSize: "14px", marginBottom: "24px" }}>KI-Manager Ausbildung</p>
+        <p style={{ color: C.muted, fontSize: "14px", marginBottom: "24px" }}>
+          {filterAusbildung === "all" ? "Alle Ausbildungen" : filterAusbildung}
+        </p>
 
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
+          <span style={{ fontSize: "10px", fontWeight: 800, color: C.gold, letterSpacing: "1.5px", textTransform: "uppercase", alignSelf: "center", marginRight: "4px" }}>
+            Ausbildung
+          </span>
+          <button style={modBtn(filterAusbildung === "all")} onClick={() => setFilterAusbildung("all")}>
+            Alle
+          </button>
+          {PROGRAMS.map((p) => (
+            <button key={p.id} style={modBtn(filterAusbildung === p.label)} onClick={() => setFilterAusbildung(p.label)}>
+              {p.label}
+            </button>
+          ))}
+        </div>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
           <span style={{ fontSize: "10px", fontWeight: 800, color: C.teal, letterSpacing: "1.5px", textTransform: "uppercase", alignSelf: "center", marginRight: "4px" }}>
             Modul
@@ -84,7 +108,7 @@ export default function TrainerDashboard({
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px", marginBottom: "28px" }}>
-          {RATINGS.map((r) => {
+          {RATING_LABELS.map((r) => {
             const a = avg(r.id);
             return (
               <div key={r.id} style={{ ...card, padding: "16px", textAlign: "center", marginBottom: 0 }}>
@@ -115,10 +139,17 @@ export default function TrainerDashboard({
           filtered.map((entry, idx) => (
             <div key={idx} style={card}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <span style={{ background: "rgba(219,115,166,0.15)", color: C.pink, borderRadius: "6px", padding: "3px 10px", fontSize: "12px", fontWeight: 700 }}>
-                    {entry.module}
-                  </span>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  {entry.ausbildung && (
+                    <span style={{ background: "rgba(135,205,203,0.15)", color: C.teal, borderRadius: "6px", padding: "3px 10px", fontSize: "12px", fontWeight: 700 }}>
+                      {entry.ausbildung}
+                    </span>
+                  )}
+                  {entry.module && (
+                    <span style={{ background: "rgba(219,115,166,0.15)", color: C.pink, borderRadius: "6px", padding: "3px 10px", fontSize: "12px", fontWeight: 700 }}>
+                      {entry.module}
+                    </span>
+                  )}
                   <span style={{ color: C.muted, fontSize: "12px" }}>
                     {entry.timestamp
                       ? new Date(entry.timestamp).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
@@ -131,7 +162,7 @@ export default function TrainerDashboard({
                 </div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px", marginBottom: "18px" }}>
-                {RATINGS.map((r) => (
+                {RATING_LABELS.map((r) => (
                   <div key={r.id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "12px" }}>
                     <div style={{ fontSize: "10px", color: C.muted, marginBottom: "6px" }}>{r.label}</div>
                     <div style={{ color: C.pink, fontSize: "14px", letterSpacing: "2px" }}>
@@ -151,7 +182,7 @@ export default function TrainerDashboard({
                   [
                     ["Größte Erkenntnis", entry.openAnswers.erkenntnis],
                     ["Konkret ausprobieren", entry.openAnswers.ausprobieren],
-                    ["Take-away als KI-Manager", entry.openAnswers.takeaway],
+                    ["Take-away", entry.openAnswers.takeaway],
                   ] as [string, string][]
                 )
                   .filter(([, v]) => v)

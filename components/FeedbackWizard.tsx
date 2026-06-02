@@ -1,9 +1,9 @@
 import {
   C,
   MODULES,
-  RATINGS,
-  OPEN_QUESTIONS,
-  stepColor,
+  PROGRAMS,
+  stepColorForKind,
+  type Step,
   type RatingId,
   type OpenQuestionId,
 } from "@/lib/constants";
@@ -12,14 +12,19 @@ import type { Ratings, FollowUps, OpenAnswers } from "@/lib/types";
 import Screen from "./Screen";
 import AHILogo from "./AHILogo";
 import ProgressBar from "./ProgressBar";
+import TopicNav from "./TopicNav";
 import StarRating from "./StarRating";
+import TrainerPicker from "./TrainerPicker";
 import TrainerIcon from "./TrainerIcon";
 
 const getFollowUpType = (score: number): "low" | "mid" | "high" =>
   score <= 3 ? "low" : score === 4 ? "mid" : "high";
 
 export default function FeedbackWizard({
+  steps,
   step,
+  selectedProgram,
+  onSelectProgram,
   selectedModule,
   onSelectModule,
   selectedTrainer,
@@ -39,7 +44,10 @@ export default function FeedbackWizard({
   onBack,
   onOpenTrainerLogin,
 }: {
+  steps: Step[];
   step: number;
+  selectedProgram: string;
+  onSelectProgram: (id: string) => void;
   selectedModule: string;
   onSelectModule: (m: string) => void;
   selectedTrainer: string;
@@ -59,26 +67,17 @@ export default function FeedbackWizard({
   onBack: () => void;
   onOpenTrainerLogin: () => void;
 }) {
-  const color = stepColor(step);
+  const current = steps[step];
+  const color = stepColorForKind(current.kind);
 
-  const NavRow = ({
-    label,
-    navColor,
-    disabled,
-    showBack = true,
-  }: {
-    label: string;
-    navColor: string;
-    disabled: boolean;
-    showBack?: boolean;
-  }) => (
-    <div style={{ display: "flex", justifyContent: showBack ? "space-between" : "flex-end", marginTop: "24px" }}>
-      {showBack && (
+  const NavRow = ({ label }: { label: string }) => (
+    <div style={{ display: "flex", justifyContent: step > 0 ? "space-between" : "flex-end", marginTop: "24px" }}>
+      {step > 0 && (
         <button style={ghost} onClick={onBack}>
           Zurück
         </button>
       )}
-      <button style={btnPrimary(navColor, disabled)} onClick={onNext}>
+      <button style={btnPrimary(color, !ok)} onClick={onNext}>
         {label}
       </button>
     </div>
@@ -86,12 +85,28 @@ export default function FeedbackWizard({
 
   return (
     <Screen>
-      {step === 0 && <TrainerIcon onClick={onOpenTrainerLogin} />}
+      {current.kind === "program" && <TrainerIcon onClick={onOpenTrainerLogin} />}
       <div style={wrap}>
         <AHILogo />
-        <ProgressBar step={step} />
+        <TopicNav steps={steps} step={step} />
+        <ProgressBar steps={steps} step={step} />
 
-        {step === 0 && (
+        {current.kind === "program" && (
+          <div style={card}>
+            <span style={lbl(C.teal)}>Ausbildung auswählen</span>
+            <p style={qst}>Welche Ausbildung absolvierst du gerade?</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: "10px" }}>
+              {PROGRAMS.map((p) => (
+                <button key={p.id} style={modBtn(selectedProgram === p.id)} onClick={() => onSelectProgram(p.id)}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <NavRow label="Weiter" />
+          </div>
+        )}
+
+        {current.kind === "module" && (
           <div style={card}>
             <span style={lbl(C.teal)}>Modul auswählen</span>
             <p style={qst}>Welches Modul hast du gerade abgeschlossen?</p>
@@ -102,52 +117,26 @@ export default function FeedbackWizard({
                 </button>
               ))}
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "24px" }}>
-              <button style={btnPrimary(C.teal, !ok)} onClick={onNext}>
-                Weiter
-              </button>
-            </div>
+            <NavRow label="Weiter" />
           </div>
         )}
 
-        {step === 1 && (
+        {current.kind === "trainer" && (
           <div style={card}>
             <span style={lbl(C.teal)}>Trainer auswählen</span>
-            <p style={qst}>Wer hat dich in diesem Modul als Trainer begleitet?</p>
-            {loadingTrainers ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", color: C.muted, fontSize: "14px" }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: "16px",
-                    height: "16px",
-                    border: "2px solid " + C.teal,
-                    borderTopColor: "transparent",
-                    borderRadius: "50%",
-                    animation: "spin 0.8s linear infinite",
-                  }}
-                />
-                Trainer werden geladen...
-              </div>
-            ) : trainerList.length === 0 ? (
-              <p style={{ color: C.muted, fontStyle: "italic", fontSize: "14px" }}>
-                Keine Trainer für dieses Modul hinterlegt.
-              </p>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: "10px" }}>
-                {trainerList.map((t) => (
-                  <button key={t} style={modBtn(selectedTrainer === t)} onClick={() => setSelectedTrainer(t)}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            )}
-            <NavRow label="Weiter" navColor={C.teal} disabled={!ok} />
+            <p style={qst}>Wer hat dich als Trainer begleitet?</p>
+            <TrainerPicker
+              trainers={trainerList}
+              selected={selectedTrainer}
+              onSelect={setSelectedTrainer}
+              loading={loadingTrainers}
+            />
+            <NavRow label="Weiter" />
           </div>
         )}
 
-        {step >= 2 && step <= 5 && (() => {
-          const r = RATINGS[step - 2];
+        {current.kind === "rating" && (() => {
+          const r = current.rating;
           const score = ratings[r.id];
           const type = score > 0 ? getFollowUpType(score) : null;
           const followupFilled = followUps[r.id].trim() !== "";
@@ -171,13 +160,13 @@ export default function FeedbackWizard({
                   Bitte wähle zunächst eine Bewertung aus.
                 </p>
               )}
-              <NavRow label="Weiter" navColor={C.pink} disabled={!ok} />
+              <NavRow label="Weiter" />
             </div>
           );
         })()}
 
-        {step >= 6 && step <= 8 && (() => {
-          const q = OPEN_QUESTIONS[step - 6];
+        {current.kind === "open" && (() => {
+          const q = current.question;
           const filled = openAnswers[q.id].trim() !== "";
           return (
             <div style={card}>
@@ -189,12 +178,12 @@ export default function FeedbackWizard({
                 value={openAnswers[q.id]}
                 onChange={(e) => setOpenAnswer(q.id, e.target.value)}
               />
-              <NavRow label="Weiter" navColor={C.gold} disabled={!ok} />
+              <NavRow label="Weiter" />
             </div>
           );
         })()}
 
-        {step === 9 && (
+        {current.kind === "name" && (
           <div style={card}>
             <span style={lbl(C.gold)}>Fast geschafft</span>
             <p style={qst}>Möchtest du deinen Namen hinterlassen?</p>
@@ -208,7 +197,7 @@ export default function FeedbackWizard({
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <NavRow label={name.trim() ? "Weiter" : "Überspringen"} navColor={C.gold} disabled={false} />
+            <NavRow label={name.trim() ? "Weiter" : "Überspringen"} />
           </div>
         )}
       </div>

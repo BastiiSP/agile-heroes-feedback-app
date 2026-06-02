@@ -10,6 +10,7 @@ export type OpenAnswers = Record<OpenQuestionId, string>;
 // weitergereicht wird.
 export interface FeedbackEntry {
   id: number;
+  ausbildung: string;
   module: string;
   trainer: string;
   name: string;
@@ -22,6 +23,7 @@ export interface FeedbackEntry {
 // Was der Trainer-Bereich aus dem Sheet geladen anzeigt.
 export interface FeedbackItem {
   id: number;
+  ausbildung: string;
   module: string;
   trainer: string;
   name: string;
