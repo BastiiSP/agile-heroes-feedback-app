@@ -12,6 +12,8 @@
     "gas:deploy": "clasp deploy -i AKfycbxVV4pCljaLeLe2Tn1hsL14JIe3a1fkok_SKJ9GMAYC79sTJn9o7Lw_JGUwEJNUidnLwQ"
   },
   "dependencies": {
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
