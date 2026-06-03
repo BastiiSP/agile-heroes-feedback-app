@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "gas:pull": "clasp pull",
+    "gas:push": "clasp push",
+    "gas:deploy": "clasp deploy -i AKfycbxVV4pCljaLeLe2Tn1hsL14JIe3a1fkok_SKJ9GMAYC79sTJn9o7Lw_JGUwEJNUidnLwQ"
   },
   "dependencies": {
     "next": "^15.1.6",
@@ -15,6 +18,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@google/clasp": "^3.3.0",
     "@types/node": "^20.17.12",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
