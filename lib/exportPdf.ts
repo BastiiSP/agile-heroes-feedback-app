@@ -115,11 +115,38 @@ function drawStar(doc: jsPDF, cx: number, cy: number, r: number, filled: boolean
   doc.lines(deltas, pts[0][0], pts[0][1], [1, 1], filled ? "F" : "S", true);
 }
 
-function drawStars(doc: jsPDF, x: number, y: number, value: number, color: Rgb): void {
+// Sterne mit Dezimalunterstützung via Clip-Mask:
+// Alle 5 Outline-Sterne zeichnen, dann Clip-Rechteck auf den gefüllten Anteil
+// setzen und darin 5 gefüllte Sterne zeichnen (wie ein Fortschrittsbalken).
+function drawStarsPartial(doc: jsPDF, x: number, y: number, value: number, color: Rgb): void {
+  const r = 1.8;
+  const spacing = 4.4;
+  const totalWidth = 4 * spacing + 2 * r; // 21.2 mm für 5 Sterne
+  const fillWidth = Math.max(0, Math.min(value / 5, 1)) * totalWidth;
+
   doc.setFillColor(...color);
   doc.setDrawColor(...color);
   doc.setLineWidth(0.2);
-  for (let i = 0; i < 5; i++) drawStar(doc, x + i * 4.4 + 1.8, y, 1.8, i < value);
+
+  // 1. Alle 5 Sterne als Outline (leere Sterne im Hintergrund)
+  for (let i = 0; i < 5; i++) {
+    drawStar(doc, x + i * spacing + r, y, r, false);
+  }
+
+  // 2. Gefüllte Sterne via Clip auf den Fortschrittsbalken-Bereich
+  if (fillWidth > 0) {
+    doc.saveGraphicsState();
+    (doc as unknown as Record<string, (...args: unknown[]) => void>).rect(
+      x, y - r - 0.5, fillWidth, 2 * r + 1, null
+    );
+    doc.clip();
+    doc.discardPath();
+    doc.setFillColor(...color);
+    for (let i = 0; i < 5; i++) {
+      drawStar(doc, x + i * spacing + r, y, r, true);
+    }
+    doc.restoreGraphicsState();
+  }
 }
 
 export async function exportFeedbackPdf(
@@ -229,7 +256,7 @@ export async function exportFeedbackPdf(
         align: "center",
       });
 
-      drawStars(doc, x + boxW / 2 - 11.5, y + 14.5, isNaN(avgN) ? 0 : Math.round(avgN), PINK);
+      drawStarsPartial(doc, x + boxW / 2 - 11.5, y + 14.5, isNaN(avgN) ? 0 : avgN, PINK);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7.5);
@@ -311,7 +338,7 @@ export async function exportFeedbackPdf(
         doc.setFontSize(8.5);
         doc.setTextColor(...MUTED);
         doc.text(b.label, MARGIN + 2, y);
-        drawStars(doc, MARGIN + 52, y - 1.4, b.value, PINK);
+        drawStarsPartial(doc, MARGIN + 52, y - 1.4, b.value, PINK);
         doc.setTextColor(...DARK);
         doc.text(b.value > 0 ? `${b.value} / 5` : "–", MARGIN + 78, y);
         y += 4.6;
