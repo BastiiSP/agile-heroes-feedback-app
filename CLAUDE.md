@@ -55,6 +55,10 @@ lib/
   styles.ts      # geteilte Inline-Style-Objekte
   types.ts       # FeedbackEntry, FeedbackItem (inkl. ausbildung), Ratings, FollowUps, OpenAnswers
   appsScript.ts  # server-only: getTrainers/submitFeedback/loadFeedback inkl. dt. Spalten-Mapping
+gas/
+  Code.js        # Google-Apps-Script-Quellcode (doGet: submit/getTrainers/Lesepfad), via clasp synchronisiert
+  appsscript.json  # GAS-Manifest (Webapp: ANYONE_ANONYMOUS, V8)
+.clasp.json      # clasp-Konfiguration (Script-ID + rootDir gas/)
 public/ahi-logo.svg  # Logo für den Header
 ```
 
@@ -87,8 +91,7 @@ Eigene Module/Module für AIAE später = `modules`-Array in `PROGRAMS` füllen, 
 ## Was nicht angefasst werden darf
 
 - `GOOGLE_APPS_SCRIPT_URL` (Env) – nie ändern, sonst bricht die gesamte Datenanbindung
-- Die deutschen Spaltennamen im Mapping in `lib/appsScript.ts` (`"Inhalte ★"` etc.) – müssen zum Sheet passen
-- **Offen/Backend:** Der `ausbildung`-Wert wird zwar mitgesendet und beim Laden aus der Spalte `"Ausbildung"` gemappt, aber das Apps Script + Sheet müssen diese Spalte noch schreiben/zurückliefern. Bis dahin bleibt der Ausbildungs-Filter im Dashboard leer (Einreichung funktioniert trotzdem)
+- Die deutschen Spaltennamen im Mapping in `lib/appsScript.ts` (`"Inhalte ★"` etc.) – müssen zum Sheet passen und identisch in `FEEDBACK_HEADERS` in `gas/Code.js` stehen (beide Seiten desselben Vertrags)
 - Das Design-System (Farben, Fonts, Abstände, Inline-Styles) – ist bewusst so
 - Der Mesh-Hintergrund (`MeshBg`, `NetworkLines`) – rein dekorativ, stabil lassen
 - Die Passwortlogik im Route Handler `app/api/trainer/route.ts` (serverseitiger Check)
@@ -102,6 +105,26 @@ npm run build    # Production-Build prüfen
 ```
 
 Deployment: committen und pushen – Vercel deployt automatisch aus dem GitHub-Repo. Env-Variablen müssen in den Vercel-Project-Settings gesetzt sein.
+
+## GAS-Entwicklung mit clasp
+
+Der Google-Apps-Script-Code liegt versioniert unter `gas/Code.js` und wird mit [clasp](https://github.com/google/clasp) (devDependency) synchronisiert. `.clasp.json` enthält die Script-ID des bestehenden GAS-Projekts.
+
+**Workflow für GAS-Änderungen:**
+
+```
+npm run gas:pull     # Cloud-Stand nach gas/ holen (vor dem Editieren, falls jemand im Web-Editor geändert hat)
+# … gas/Code.js lokal bearbeiten …
+npm run gas:push     # Code zu Google hochladen (überschreibt den Cloud-Stand!)
+npm run gas:deploy   # bestehendes Web-App-Deployment auf die neue Version heben
+```
+
+**Wichtig:**
+- `gas:deploy` nutzt fest `clasp deploy -i <Deployment-ID>` und aktualisiert damit das **bestehende** Deployment – die `/exec`-URL (= `GOOGLE_APPS_SCRIPT_URL`) bleibt stabil. **Niemals** `clasp deploy` ohne `-i` bzw. `clasp create-deployment` nutzen, das erzeugt eine neue URL
+- `clasp push` allein reicht **nicht** – die Web-App serviert eine feste Version, erst `gas:deploy` macht Änderungen live
+- Auth: einmalig `npx clasp login` (Browser-OAuth mit dem Google-Konto, dem das Script gehört: `ki.manager.tools@gmail.com`); Credentials liegen in `~/.clasprc.json`, nie im Repo
+- `gas/Code.js` schreibt header-basiert in den Tab „Feedback": Werte werden über die Spaltennamen der Kopfzeile zugeordnet, fehlende Spalten automatisch rechts ergänzt. Die `FEEDBACK_HEADERS`-Liste muss zum Spalten-Mapping in `lib/appsScript.ts` passen
+- GAS-Antworten dürfen im Erfolgsfall **nie** `error`/`exception`/HTML enthalten – `submitFeedback()` wertet das als Fehlschlag
 
 ## Claudian-Update-Format
 
