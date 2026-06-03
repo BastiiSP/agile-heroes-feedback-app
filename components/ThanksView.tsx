@@ -16,10 +16,10 @@ export default function ThanksView({ onReset }: { onReset: () => void }) {
         </div>
         <h1 style={{ fontSize: "28px", fontWeight: 800, marginBottom: "16px" }}>Vielen herzlichen Dank!</h1>
         <p style={{ fontSize: "16px", color: C.muted, lineHeight: "1.75", maxWidth: "440px", margin: "0 auto 36px" }}>
-          Dein Feedback hilft uns dabei, die KI-Manager Ausbildung kontinuierlich zu verbessern und noch wertvoller zu gestalten. Für dich und alle zukünftigen Teilnehmer. Das bedeutet uns wirklich viel.
+          Dein Feedback hilft uns dabei, unsere Ausbildungen kontinuierlich zu verbessern und noch wertvoller zu gestalten – für dich und alle zukünftigen Teilnehmer. Das bedeutet uns wirklich viel.
         </p>
         <div style={{ display: "inline-block", padding: "16px 24px", background: "rgba(135,205,203,0.08)", border: "1px solid rgba(135,205,203,0.2)", borderRadius: "12px", marginBottom: "36px" }}>
-          <p style={{ color: C.teal, fontWeight: 700, margin: 0, fontSize: "15px" }}>Basti und das Agile Heroes Team</p>
+          <p style={{ color: C.teal, fontWeight: 700, margin: 0, fontSize: "15px" }}>Das Agile Heroes Team</p>
         </div>
         <div>
           <button style={ghost} onClick={onReset}>Neues Feedback geben</button>

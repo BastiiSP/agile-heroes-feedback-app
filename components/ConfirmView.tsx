@@ -5,10 +5,12 @@ import AHILogo from "./AHILogo";
 
 export default function ConfirmView({
   submitting,
+  error,
   onBack,
   onSubmit,
 }: {
   submitting: boolean;
+  error?: boolean;
   onBack: () => void;
   onSubmit: () => void;
 }) {
@@ -27,9 +29,14 @@ export default function ConfirmView({
         <p style={{ fontSize: "16px", color: C.muted, lineHeight: "1.7", maxWidth: "400px", margin: "0 auto 16px" }}>
           Dein Feedback ist vollständig. Ein Klick, und du machst die Ausbildung besser.
         </p>
-        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.2)", marginBottom: "40px" }}>
+        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.2)", marginBottom: error ? "20px" : "40px" }}>
           Du kannst auch nochmal zurückgehen und etwas anpassen.
         </p>
+        {error && (
+          <p style={{ fontSize: "15px", color: C.pink, fontWeight: 700, lineHeight: "1.6", maxWidth: "400px", margin: "0 auto 28px" }}>
+            Dein Feedback konnte gerade nicht gespeichert werden. Deine Eingaben sind erhalten – bitte versuche es noch einmal.
+          </p>
+        )}
         <div style={{ display: "flex", gap: "14px", justifyContent: "center" }}>
           <button style={ghost} onClick={onBack}>Zurück</button>
           <button

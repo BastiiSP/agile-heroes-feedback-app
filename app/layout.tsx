@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "KI-Manager Ausbildung – Modul-Feedback",
+  title: "Agile Heroes – Feedback",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

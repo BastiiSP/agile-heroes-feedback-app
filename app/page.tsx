@@ -21,6 +21,7 @@ export default function Page() {
   const [openAnswers, setOpenAnswers] = useState<OpenAnswers>({ erkenntnis: "", ausprobieren: "", takeaway: "" });
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
   const [selectedTrainer, setSelectedTrainer] = useState("");
   const [trainerList, setTrainerList] = useState<Trainer[]>([]);
   const [loadingTrainers, setLoadingTrainers] = useState(false);
@@ -91,6 +92,7 @@ export default function Page() {
     setRatings({ inhalt: 0, didaktik: 0, gestaltung: 0, trainer: 0 });
     setFollowUps({ inhalt: "", didaktik: "", gestaltung: "", trainer: "" });
     setOpenAnswers({ erkenntnis: "", ausprobieren: "", takeaway: "" });
+    setSubmitError(false);
     setView("form");
   };
 
@@ -107,6 +109,7 @@ export default function Page() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
+    setSubmitError(false);
     const entry: FeedbackEntry = {
       id: Date.now(),
       ausbildung: program?.label || "",
@@ -119,16 +122,21 @@ export default function Page() {
       timestamp: new Date().toISOString(),
     };
     try {
-      await fetch("/api/feedback", {
+      const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
       });
+      if (!res.ok) throw new Error(`submit failed: ${res.status}`);
+      // Dankesseite NUR bei bestätigtem Erfolg – sonst bliebe ein
+      // fehlgeschlagenes Speichern (wie bisher) unbemerkt.
+      setView("thanks");
     } catch {
-      // Einreichung ist fire-and-forget; wir zeigen den Dank-Screen in jedem Fall.
+      // Eingaben bleiben erhalten; der Nutzer bleibt auf der confirm-View
+      // und kann erneut absenden.
+      setSubmitError(true);
     }
     setSubmitting(false);
-    setView("thanks");
   };
 
   // Feedbacks laden (Login + Aktualisieren) – Passwort serverseitig geprüft.
@@ -164,7 +172,9 @@ export default function Page() {
     return (
       <ConfirmView
         submitting={submitting}
+        error={submitError}
         onBack={() => {
+          setSubmitError(false);
           setView("form");
           setStep(steps.length - 1);
         }}

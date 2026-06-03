@@ -35,10 +35,25 @@ export async function getTrainers(): Promise<Trainer[]> {
 }
 
 // Feedback einreichen. Ersetzt den ursprünglichen Image-Beacon durch einen
-// echten, awaited Server-Request.
+// echten, awaited Server-Request. GET-Vertrag (action=submit&data=…) wie im
+// MVP – das Apps Script schreibt die Zeile in doGet.
+//
+// Wichtig: Die Antwort wird vollständig konsumiert und geprüft. Das stellt
+// sicher, dass der Outbound-Request tatsächlich abgeschlossen ist (kein
+// vorzeitiger Funktions-Freeze auf Vercel) UND macht GAS-Fehler überhaupt
+// erst sichtbar – das Verschlucken der Antwort war die Ursache dafür, dass
+// fehlgeschlagene Einreichungen bisher unbemerkt blieben.
 export async function submitFeedback(entry: FeedbackEntry): Promise<void> {
   const url = gasUrl() + "?action=submit&data=" + encodeURIComponent(JSON.stringify(entry));
-  await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, { cache: "no-store" });
+  const body = await res.text();
+  if (!res.ok) {
+    throw new Error(`GAS submit failed: ${res.status} ${body.slice(0, 300)}`);
+  }
+  // GAS liefert bei einem Skriptfehler oft 200 + Fehlertext/HTML zurück.
+  if (/error|exception|<title>/i.test(body)) {
+    throw new Error(`GAS submit returned error body: ${body.slice(0, 300)}`);
+  }
 }
 
 // Alle Feedbacks laden und auf das interne Modell mappen (deutsche

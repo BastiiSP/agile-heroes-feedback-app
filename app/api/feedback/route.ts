@@ -8,7 +8,8 @@ export async function POST(request: Request) {
     const entry = (await request.json()) as FeedbackEntry;
     await submitFeedback(entry);
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("submitFeedback failed:", err);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
