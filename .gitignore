@@ -22,5 +22,8 @@ next-env.d.ts
 # playwright mcp
 .playwright-mcp/
 
+# superpowers plans (temporäre Prozess-Artefakte)
+docs/superpowers/
+
 # typescript
 *.tsbuildinfo
