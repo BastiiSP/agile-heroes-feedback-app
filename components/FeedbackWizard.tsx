@@ -2,11 +2,13 @@ import {
   C,
   MODULES,
   PROGRAMS,
-  stepColorForKind,
+  phaseOf,
   type Step,
   type RatingId,
   type OpenQuestionId,
 } from "@/lib/constants";
+import { phaseColorT } from "@/lib/theme";
+import { useTheme } from "./ThemeContext";
 import { wrap, card, lbl, qst, fup, taStyle, inpStyle, btnPrimary, ghost, modBtn } from "@/lib/styles";
 import type { Ratings, FollowUps, OpenAnswers, Trainer } from "@/lib/types";
 import Screen from "./Screen";
@@ -67,8 +69,9 @@ export default function FeedbackWizard({
   onBack: () => void;
   onOpenTrainerLogin: () => void;
 }) {
+  const theme = useTheme();
   const current = steps[step];
-  const color = stepColorForKind(current.kind);
+  const color = phaseColorT(theme, phaseOf(current.kind));
 
   const NavRow = ({ label }: { label: string }) => (
     <div style={{ display: "flex", justifyContent: step > 0 ? "space-between" : "flex-end", marginTop: "24px" }}>
@@ -93,11 +96,11 @@ export default function FeedbackWizard({
 
         {current.kind === "program" && (
           <div style={card}>
-            <span style={lbl(C.teal)}>Ausbildung auswählen</span>
+            <span style={lbl(theme.setup)}>Ausbildung auswählen</span>
             <p style={qst}>Welche Ausbildung absolvierst du gerade?</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: "10px" }}>
               {PROGRAMS.map((p) => (
-                <button key={p.id} style={modBtn(selectedProgram === p.id)} onClick={() => onSelectProgram(p.id)}>
+                <button key={p.id} style={modBtn(selectedProgram === p.id, theme.rating)} onClick={() => onSelectProgram(p.id)}>
                   {p.label}
                 </button>
               ))}
@@ -108,11 +111,11 @@ export default function FeedbackWizard({
 
         {current.kind === "module" && (
           <div style={card}>
-            <span style={lbl(C.teal)}>Modul auswählen</span>
+            <span style={lbl(theme.setup)}>Modul auswählen</span>
             <p style={qst}>Welches Modul hast du gerade abgeschlossen?</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: "10px" }}>
               {MODULES.map((m) => (
-                <button key={m} style={modBtn(selectedModule === m)} onClick={() => onSelectModule(m)}>
+                <button key={m} style={modBtn(selectedModule === m, theme.rating)} onClick={() => onSelectModule(m)}>
                   {m}
                 </button>
               ))}
@@ -123,7 +126,7 @@ export default function FeedbackWizard({
 
         {current.kind === "trainer" && (
           <div style={card}>
-            <span style={lbl(C.teal)}>Trainer auswählen</span>
+            <span style={lbl(theme.setup)}>Trainer auswählen</span>
             <p style={qst}>Wer hat dich als Trainer begleitet?</p>
             <TrainerPicker
               trainers={trainerList}
@@ -142,14 +145,14 @@ export default function FeedbackWizard({
           const followupFilled = followUps[r.id].trim() !== "";
           return (
             <div style={card}>
-              <span style={lbl(C.pink)}>{r.label}</span>
+              <span style={lbl(theme.rating)}>{r.label}</span>
               <p style={qst}>{r.question}</p>
               <StarRating value={score} onChange={(v) => onRateChange(r.id, v)} />
               {type ? (
                 <>
                   <p style={fup}>{r.followUp[type]}</p>
                   <textarea
-                    style={taStyle(!followupFilled)}
+                    style={taStyle(!followupFilled, theme.reflexion)}
                     placeholder="Deine Antwort (Pflichtfeld)..."
                     value={followUps[r.id]}
                     onChange={(e) => setFollowUp(r.id, e.target.value)}
@@ -170,10 +173,10 @@ export default function FeedbackWizard({
           const filled = openAnswers[q.id].trim() !== "";
           return (
             <div style={card}>
-              <span style={lbl(C.gold)}>Deine Reflexion</span>
+              <span style={lbl(theme.reflexion)}>Deine Reflexion</span>
               <p style={qst}>{q.q}</p>
               <textarea
-                style={taStyle(!filled)}
+                style={taStyle(!filled, theme.reflexion)}
                 placeholder="Deine Antwort (Pflichtfeld)..."
                 value={openAnswers[q.id]}
                 onChange={(e) => setOpenAnswer(q.id, e.target.value)}
@@ -185,7 +188,7 @@ export default function FeedbackWizard({
 
         {current.kind === "name" && (
           <div style={card}>
-            <span style={lbl(C.gold)}>Fast geschafft</span>
+            <span style={lbl(theme.reflexion)}>Fast geschafft</span>
             <p style={qst}>Möchtest du deinen Namen hinterlassen?</p>
             <p style={{ fontSize: "14px", color: C.muted, marginBottom: "16px", lineHeight: "1.6" }}>
               Dein Feedback ist standardmäßig anonym. Du kannst deinen Namen freiwillig angeben.
