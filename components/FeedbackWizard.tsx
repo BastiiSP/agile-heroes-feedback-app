@@ -1,6 +1,5 @@
 import {
   C,
-  MODULES,
   PROGRAMS,
   phaseOf,
   type Step,
@@ -72,6 +71,7 @@ export default function FeedbackWizard({
   const theme = useTheme();
   const current = steps[step];
   const color = phaseColorT(theme, phaseOf(current.kind));
+  const currentProgram = PROGRAMS.find((p) => p.id === selectedProgram);
 
   const NavRow = ({ label }: { label: string }) => (
     <div style={{ display: "flex", justifyContent: step > 0 ? "space-between" : "flex-end", marginTop: "24px" }}>
@@ -114,7 +114,7 @@ export default function FeedbackWizard({
             <span style={lbl(theme.setup)}>Modul auswählen</span>
             <p style={qst}>Welches Modul hast du gerade abgeschlossen?</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: "10px" }}>
-              {MODULES.map((m) => (
+              {(currentProgram?.modules ?? []).map((m) => (
                 <button key={m} style={modBtn(selectedModule === m, theme.rating)} onClick={() => onSelectModule(m)}>
                   {m}
                 </button>
