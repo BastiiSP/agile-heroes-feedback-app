@@ -1,4 +1,8 @@
-import { C, phaseColor, phaseOf, type Step } from "@/lib/constants";
+"use client";
+
+import { C, phaseOf, type Step } from "@/lib/constants";
+import { phaseColorT } from "@/lib/theme";
+import { useTheme } from "./ThemeContext";
 
 // Detaillierte Themen-/Kategorien-Leiste: gibt Orientierung, welche Themen die
 // Fragen abdecken und wo man gerade steht. Ableitung aus dem (variablen)
@@ -25,12 +29,13 @@ function bucketLabel(step: Step): string {
 }
 
 export default function TopicNav({ steps, step }: { steps: Step[]; step: number }) {
+  const theme = useTheme();
   // Geordnete, eindeutige Kategorien aufbauen.
   const categories: Category[] = [];
   steps.forEach((s) => {
     const key = bucketKey(s);
     if (!categories.some((c) => c.key === key)) {
-      categories.push({ key, label: bucketLabel(s), color: phaseColor(phaseOf(s.kind)) });
+      categories.push({ key, label: bucketLabel(s), color: phaseColorT(theme, phaseOf(s.kind)) });
     }
   });
 

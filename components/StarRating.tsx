@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { C } from "@/lib/constants";
+import { useTheme } from "./ThemeContext";
 
 export default function StarRating({
   value,
@@ -11,6 +11,7 @@ export default function StarRating({
   onChange: (star: number) => void;
 }) {
   const [hovered, setHovered] = useState(0);
+  const theme = useTheme();
   return (
     <div style={{ display: "flex", gap: "8px" }}>
       {[1, 2, 3, 4, 5].map((star) => (
@@ -26,7 +27,7 @@ export default function StarRating({
             fontSize: "40px",
             lineHeight: 1,
             padding: 0,
-            color: star <= (hovered || value) ? C.pink : "rgba(255,255,255,0.15)",
+            color: star <= (hovered || value) ? theme.rating : "rgba(255,255,255,0.15)",
             transition: "color 0.12s, transform 0.1s",
             transform: star <= (hovered || value) ? "scale(1.15)" : "scale(1)",
           }}
