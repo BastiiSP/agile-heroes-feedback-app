@@ -1,7 +1,7 @@
 import { C } from "@/lib/constants";
 import { wrap, inpStyle, btnPrimary, ghost } from "@/lib/styles";
 import Screen from "./Screen";
-import AHILogo from "./AHILogo";
+import DualLogo from "./DualLogo";
 
 export default function TrainerLogin({
   password,
@@ -20,7 +20,7 @@ export default function TrainerLogin({
     <Screen>
       <div style={{ ...wrap, maxWidth: "420px" }}>
         <div style={{ paddingTop: "80px" }}>
-          <AHILogo />
+          <DualLogo />
           <h1 style={{ fontSize: "26px", fontWeight: 800, marginBottom: "8px" }}>Trainer-Zugang</h1>
           <p style={{ fontSize: "15px", color: C.muted, marginBottom: "28px" }}>
             Bitte gib das Passwort ein, um zur Feedback-Auswertung zu gelangen.

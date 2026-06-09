@@ -12,6 +12,7 @@ import { wrap, card, lbl, qst, fup, taStyle, inpStyle, btnPrimary, ghost, modBtn
 import type { Ratings, FollowUps, OpenAnswers, Trainer } from "@/lib/types";
 import Screen from "./Screen";
 import AHILogo from "./AHILogo";
+import DualLogo from "./DualLogo";
 import ProgressBar from "./ProgressBar";
 import TopicNav from "./TopicNav";
 import StarRating from "./StarRating";
@@ -90,7 +91,7 @@ export default function FeedbackWizard({
     <Screen>
       {current.kind === "program" && <TrainerIcon onClick={onOpenTrainerLogin} />}
       <div style={wrap}>
-        <AHILogo />
+        {current.kind === "program" && !selectedProgram ? <DualLogo /> : <AHILogo />}
         <TopicNav steps={steps} step={step} />
         <ProgressBar steps={steps} step={step} />
 

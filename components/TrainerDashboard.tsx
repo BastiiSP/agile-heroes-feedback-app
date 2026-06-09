@@ -6,7 +6,7 @@ import { avgColor, type ExportMeta } from "@/lib/exportShared";
 import { exportFeedbackCsv } from "@/lib/exportCsv";
 import { exportFeedbackPdf } from "@/lib/exportPdf";
 import Screen from "./Screen";
-import AHILogo from "./AHILogo";
+import DualLogo from "./DualLogo";
 import TrainerFilterSelect from "./TrainerFilterSelect";
 
 // Die Bewertungs-IDs/-Labels sind ausbildungsübergreifend identisch; KIMA_RATINGS
@@ -112,7 +112,7 @@ export default function TrainerDashboard({
     <Screen>
       <div style={wrap}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-          <AHILogo />
+          <DualLogo />
           <button style={{ ...ghost, fontSize: "13px", padding: "8px 16px" }} onClick={onLogout}>
             Abmelden
           </button>
