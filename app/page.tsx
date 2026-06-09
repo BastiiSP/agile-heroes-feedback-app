@@ -99,10 +99,16 @@ export default function Page() {
     setView("form");
   };
 
-  // Ausbildungswahl: Modulwahl zurücksetzen (relevant bei Wechsel zw. Pfaden).
+  // Ausbildungswahl: erneuter Klick auf die gewählte Ausbildung wählt sie ab.
+  // Modulwahl wird dabei stets zurückgesetzt (relevant bei Wechsel zw. Pfaden).
   const handleSelectProgram = (id: string) => {
-    setSelectedProgram(id);
+    setSelectedProgram((prev) => (prev === id ? "" : id));
     setSelectedModule("");
+  };
+
+  // Modulwahl: erneuter Klick auf das gewählte Modul wählt es ab.
+  const handleSelectModule = (m: string) => {
+    setSelectedModule((prev) => (prev === m ? "" : m));
   };
 
   const handleRateChange = (id: RatingId, value: number) => {
@@ -236,7 +242,7 @@ export default function Page() {
         selectedProgram={selectedProgram}
         onSelectProgram={handleSelectProgram}
         selectedModule={selectedModule}
-        onSelectModule={setSelectedModule}
+        onSelectModule={handleSelectModule}
         selectedTrainer={selectedTrainer}
         setSelectedTrainer={setSelectedTrainer}
         trainerList={trainerList}
