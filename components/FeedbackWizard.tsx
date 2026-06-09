@@ -116,7 +116,17 @@ export default function FeedbackWizard({
             <p style={qst}>Welches Modul hast du gerade abgeschlossen?</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: "10px" }}>
               {(currentProgram?.modules ?? []).map((m) => (
-                <button key={m} style={modBtn(selectedModule === m, theme.rating)} onClick={() => onSelectModule(m)}>
+                <button
+                  key={m}
+                  style={{
+                    ...modBtn(selectedModule === m, theme.rating),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: "64px",
+                  }}
+                  onClick={() => onSelectModule(m)}
+                >
                   {m}
                 </button>
               ))}
