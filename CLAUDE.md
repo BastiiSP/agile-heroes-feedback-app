@@ -8,7 +8,7 @@ Aktuell vier Ausbildungen, je mit einer **Markenzugehörigkeit** (`brand` in `PR
 - **Agile Heroes Intelligence (`brand: "ahi"`)** – *KI-Manager / KIMA* (mit Modulen), *AI Automation Engineer / AIAE* (ohne Module).
 - **Agile Heroes GmbH (`brand: "ahg"`)** – *Systemische Business Coach / SyCo* und *Agile Coach / ACA* (beide mit Modulen).
 
-Der Teilnehmer-Wizard erscheint je nach `brand` im AHI- oder im GmbH-Corporate-Design (siehe „Marken-Theming"). Dashboard & Login bleiben immer im AHI-Design.
+Der Teilnehmer-Wizard erscheint je nach `brand` im AHI- oder im GmbH-Corporate-Design (siehe „Marken-Theming"). Dashboard & Login behalten die AHI-**Farben**, zeigen aber – wie der Startbildschirm ohne Auswahl – **beide** Marken-Logos (`DualLogo`).
 
 **GitHub:** https://github.com/BastiiSP/agile-heroes-feedback-app
 **Trainerpasswort:** liegt als Umgebungsvariable `TRAINER_PASSWORD` (nicht im Code).
@@ -110,6 +110,8 @@ Der Wizard wird per **React-Context** gethemt – **nicht** über harte `C`-Farb
 - Wizard-Komponenten (`FeedbackWizard`, `MeshBg`, `AHILogo`, `StarRating`, `ProgressBar`, `TopicNav`, `ConfirmView`, `ThanksView`) lesen Farben/Logo via `useTheme()`.
 - `lib/styles.ts`: `modBtn(sel, color?)`, `taStyle(highlight, color?)`, `btnPrimary(color)` sind farbparametrisiert; **Default-Argumente reproduzieren exakt das alte AHI-Aussehen**. `textOn(color)` wählt dunklen Text auf hellen Markenfarben (Gold/Grün/Gelb/Orange), sonst weiß.
 - GmbH-Logo: `public/agile-heroes-logo.png` (rundes Piktogramm, ohne „INTELLIGENCE"-Unterzeile). AHI-Logo: `public/ahi-logo.svg`.
+- `components/DualLogo.tsx`: beide Embleme + ein „AGILE HEROES"-Wortzug (themeless). Verwendet im Startbildschirm (Programm-Schritt ohne Auswahl) und auf den Trainer-Seiten (`TrainerLogin`, `TrainerDashboard`).
+- UX: Erneuter Klick auf eine bereits gewählte Ausbildung/Modul **wählt sie ab** (`handleSelectProgram`/`handleSelectModule` in `app/page.tsx` togglen).
 
 **Beim Anfassen des Wizards:** neue Farben aus `useTheme()` beziehen, keine `C.pink`/`C.teal`/`C.gold` hartcodieren – sonst bricht das GmbH-Theme.
 
