@@ -4,6 +4,13 @@
 import type { CSSProperties } from "react";
 import { C } from "./constants";
 
+// Lesbare Textfarbe auf einer Button-Fläche. Helle Markenfarben (Gold sowie
+// die GmbH-Kernfarben Grün/Gelb/Orange) brauchen dunklen Text; Pink/Türkis
+// tragen weißen Text. Verhalten für Bestand identisch (vorher: nur Gold dunkel).
+const DARK_TEXT_ON: string[] = [C.gold, C.green, C.yellow, C.orange];
+export const textOn = (color: string): string =>
+  DARK_TEXT_ON.includes(color) ? "#1a1a1a" : "#fff";
+
 export const base: CSSProperties = {
   minHeight: "100vh",
   background: C.dark,
@@ -55,10 +62,12 @@ export const fup: CSSProperties = {
   lineHeight: "1.5",
 };
 
-export const taStyle = (highlight?: boolean): CSSProperties => ({
+export const taStyle = (highlight?: boolean, color: string = C.gold): CSSProperties => ({
   width: "100%",
   background: "rgba(255,255,255,0.05)",
-  border: "1px solid " + (highlight ? "rgba(232,192,122,0.4)" : "rgba(255,255,255,0.1)"),
+  // color + "66" ≈ 40 % Deckkraft (0x66 = 102/255). Für Gold ergibt das den
+  // bisherigen Wert rgba(232,192,122,0.4).
+  border: "1px solid " + (highlight ? color + "66" : "rgba(255,255,255,0.1)"),
   borderRadius: "10px",
   padding: "14px 16px",
   color: C.text,
@@ -86,7 +95,7 @@ export const inpStyle: CSSProperties = {
 
 export const btnPrimary = (color: string, disabled?: boolean): CSSProperties => ({
   background: disabled ? color + "55" : color,
-  color: color === C.gold ? "#1a1a1a" : "#fff",
+  color: textOn(color),
   border: "none",
   borderRadius: "10px",
   padding: "14px 32px",
@@ -107,10 +116,10 @@ export const ghost: CSSProperties = {
   fontFamily: "'Nunito',sans-serif",
 };
 
-export const modBtn = (sel?: boolean): CSSProperties => ({
-  background: sel ? C.pink : "rgba(255,255,255,0.04)",
-  color: sel ? "#fff" : C.mutedLight,
-  border: sel ? "1px solid " + C.pink : "1px solid rgba(255,255,255,0.08)",
+export const modBtn = (sel?: boolean, color: string = C.pink): CSSProperties => ({
+  background: sel ? color : "rgba(255,255,255,0.04)",
+  color: sel ? textOn(color) : C.mutedLight,
+  border: sel ? "1px solid " + color : "1px solid rgba(255,255,255,0.08)",
   borderRadius: "10px",
   padding: "12px 14px",
   fontSize: "14px",
