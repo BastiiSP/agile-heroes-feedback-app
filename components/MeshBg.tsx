@@ -1,5 +1,11 @@
+"use client";
+
+import { useTheme } from "./ThemeContext";
+
 // Dekorativer Mesh-Hintergrund (zwei radiale Gradienten). Rein dekorativ.
+// Der Gradient stammt aus dem aktiven Theme; ohne Provider = AHI (unverändert).
 export default function MeshBg() {
+  const theme = useTheme();
   return (
     <div
       style={{
@@ -10,8 +16,7 @@ export default function MeshBg() {
         height: "100%",
         pointerEvents: "none",
         zIndex: 0,
-        background:
-          "radial-gradient(ellipse at 15% 20%, rgba(219,115,166,0.15) 0%, transparent 55%), radial-gradient(ellipse at 85% 75%, rgba(135,205,203,0.12) 0%, transparent 50%)",
+        background: theme.meshGradient,
       }}
     />
   );
