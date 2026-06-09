@@ -11,6 +11,28 @@ export const MODULES = [
   "Karriere",
 ] as const;
 
+// Module der Systemische Business Coach Ausbildung (SyCo) – Agile Heroes GmbH.
+export const SYCO_MODULES = [
+  "Coachinghaltung und Coachingprozess",
+  "Neuropsychologische Grundlagen",
+  "Teamcoaching und Konfliktbegleitung",
+  "Systemische Organisationsentwicklung",
+  "Agilität trifft Systemik",
+  "Change Begleitung",
+  "(Selbst)Führung",
+  "KI Coaching",
+] as const;
+
+// Module der Agile Coach Ausbildung (ACA) – Agile Heroes GmbH.
+export const ACA_MODULES = [
+  "Agile Coach Fundamentals",
+  "Agile Facilitation",
+  "Trainings- und Workshopdesign",
+  "Coaching Skills",
+  "Agile Transformation",
+  "OKR",
+] as const;
+
 export type RatingId = "inhalt" | "didaktik" | "gestaltung" | "trainer";
 export type OpenQuestionId = "erkenntnis" | "ausprobieren" | "takeaway";
 
@@ -127,12 +149,32 @@ export const AIAE_OPEN: OpenQuestionDef[] = [
   { id: "takeaway", q: "Was nimmst du als AI Automation Engineer aus diesem Training mit?" },
 ];
 
+// Beide GmbH-Ausbildungen sind modulbasiert und nutzen das KIMA-Bewertungs-
+// Wording (RatingIds identisch → Sheet-Spalten unverändert). Nur die
+// Take-away-Frage ist rollenspezifisch.
+export const SYCO_OPEN: OpenQuestionDef[] = [
+  { id: "erkenntnis", q: "Was ist deine größte persönliche Erkenntnis aus diesem Modul?" },
+  { id: "ausprobieren", q: "Was wirst du konkret ausprobieren oder umsetzen?" },
+  { id: "takeaway", q: "Was nimmst du als zukünftiger Systemischer Business Coach aus diesem Modul mit?" },
+];
+
+export const ACA_OPEN: OpenQuestionDef[] = [
+  { id: "erkenntnis", q: "Was ist deine größte persönliche Erkenntnis aus diesem Modul?" },
+  { id: "ausprobieren", q: "Was wirst du konkret ausprobieren oder umsetzen?" },
+  { id: "takeaway", q: "Was nimmst du als zukünftiger Agile Coach aus diesem Modul mit?" },
+];
+
+// Marke einer Ausbildung – bestimmt das Theme im Feedback-Wizard.
+// "ahi" = Agile Heroes Intelligence (Türkis/Pink/Gold, Wortmarke).
+// "ahg" = Agile Heroes GmbH (Grün/Gelb/Orange, rundes Logo).
+export type BrandKey = "ahi" | "ahg";
+
 // Eine Ausbildung bündelt ihre Module und ihre (gewordeten) Fragesätze.
-// Der AIAE-Pfad hat aktuell keine Module – das Hinzufügen von Modulen ist
-// die einzige nötige Änderung, damit er einen Modul-Schritt erhält.
+// `brand` entscheidet, welches visuelle Theme der Wizard verwendet.
 export interface ProgramDef {
   id: string;
   label: string;
+  brand: BrandKey;
   modules: readonly string[];
   ratings: RatingDef[];
   openQuestions: OpenQuestionDef[];
@@ -142,6 +184,7 @@ export const PROGRAMS: ProgramDef[] = [
   {
     id: "ki-manager",
     label: "KI-Manager Ausbildung",
+    brand: "ahi",
     modules: MODULES,
     ratings: KIMA_RATINGS,
     openQuestions: KIMA_OPEN,
@@ -149,9 +192,26 @@ export const PROGRAMS: ProgramDef[] = [
   {
     id: "ai-automation",
     label: "AI Automation Engineer",
+    brand: "ahi",
     modules: [],
     ratings: AIAE_RATINGS,
     openQuestions: AIAE_OPEN,
+  },
+  {
+    id: "systemischer-business-coach",
+    label: "Systemische Business Coach Ausbildung",
+    brand: "ahg",
+    modules: SYCO_MODULES,
+    ratings: KIMA_RATINGS,
+    openQuestions: SYCO_OPEN,
+  },
+  {
+    id: "agile-coach",
+    label: "Agile Coach Ausbildung",
+    brand: "ahg",
+    modules: ACA_MODULES,
+    ratings: KIMA_RATINGS,
+    openQuestions: ACA_OPEN,
   },
 ];
 
@@ -190,11 +250,15 @@ export function phaseOf(kind: StepKind): Phase {
   return "setup"; // program | module | trainer
 }
 
-// Farbpalette
+// Farbpalette. pink/teal/gold/dark = AHI (Agile Heroes Intelligence).
+// green/yellow/orange = Kernfarben der Agile Heroes GmbH (Marken-Differenzierung).
 export const C = {
   pink: "#db73a6",
   teal: "#87cdcb",
   gold: "#e8c07a",
+  green: "#cde86a",
+  yellow: "#fcd600",
+  orange: "#feaf48",
   dark: "#212121",
   text: "#f0f0f0",
   muted: "#888",
