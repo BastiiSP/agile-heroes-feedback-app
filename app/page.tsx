@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PROGRAMS, buildSteps, type RatingId, type OpenQuestionId } from "@/lib/constants";
+import { themeForProgramId } from "@/lib/theme";
+import { ThemeProvider } from "@/components/ThemeContext";
 import type { FeedbackEntry, FeedbackItem, Ratings, FollowUps, OpenAnswers, Trainer } from "@/lib/types";
 import FeedbackWizard from "@/components/FeedbackWizard";
 import ConfirmView from "@/components/ConfirmView";
@@ -35,6 +37,7 @@ export default function Page() {
 
   const program = useMemo(() => PROGRAMS.find((p) => p.id === selectedProgram), [selectedProgram]);
   const steps = useMemo(() => buildSteps(program), [program]);
+  const activeTheme = useMemo(() => themeForProgramId(selectedProgram), [selectedProgram]);
 
   // Trainer einmalig beim Laden holen – modul-unabhängig, für alle Pfade.
   useEffect(() => {
@@ -166,20 +169,27 @@ export default function Page() {
     else setTrainerError(true);
   };
 
-  if (view === "thanks") return <ThanksView onReset={resetForm} />;
+  if (view === "thanks")
+    return (
+      <ThemeProvider value={activeTheme}>
+        <ThanksView onReset={resetForm} />
+      </ThemeProvider>
+    );
 
   if (view === "confirm")
     return (
-      <ConfirmView
-        submitting={submitting}
-        error={submitError}
-        onBack={() => {
-          setSubmitError(false);
-          setView("form");
-          setStep(steps.length - 1);
-        }}
-        onSubmit={handleSubmit}
-      />
+      <ThemeProvider value={activeTheme}>
+        <ConfirmView
+          submitting={submitting}
+          error={submitError}
+          onBack={() => {
+            setSubmitError(false);
+            setView("form");
+            setStep(steps.length - 1);
+          }}
+          onSubmit={handleSubmit}
+        />
+      </ThemeProvider>
     );
 
   if (view === "trainer-login")
@@ -219,29 +229,31 @@ export default function Page() {
     );
 
   return (
-    <FeedbackWizard
-      steps={steps}
-      step={step}
-      selectedProgram={selectedProgram}
-      onSelectProgram={handleSelectProgram}
-      selectedModule={selectedModule}
-      onSelectModule={setSelectedModule}
-      selectedTrainer={selectedTrainer}
-      setSelectedTrainer={setSelectedTrainer}
-      trainerList={trainerList}
-      loadingTrainers={loadingTrainers}
-      ratings={ratings}
-      onRateChange={handleRateChange}
-      followUps={followUps}
-      setFollowUp={(id, value) => setFollowUps((prev) => ({ ...prev, [id]: value }))}
-      openAnswers={openAnswers}
-      setOpenAnswer={(id, value) => setOpenAnswers((prev) => ({ ...prev, [id]: value }))}
-      name={name}
-      setName={setName}
-      ok={canProceed()}
-      onNext={handleNext}
-      onBack={handleBack}
-      onOpenTrainerLogin={() => setView("trainer-login")}
-    />
+    <ThemeProvider value={activeTheme}>
+      <FeedbackWizard
+        steps={steps}
+        step={step}
+        selectedProgram={selectedProgram}
+        onSelectProgram={handleSelectProgram}
+        selectedModule={selectedModule}
+        onSelectModule={setSelectedModule}
+        selectedTrainer={selectedTrainer}
+        setSelectedTrainer={setSelectedTrainer}
+        trainerList={trainerList}
+        loadingTrainers={loadingTrainers}
+        ratings={ratings}
+        onRateChange={handleRateChange}
+        followUps={followUps}
+        setFollowUp={(id, value) => setFollowUps((prev) => ({ ...prev, [id]: value }))}
+        openAnswers={openAnswers}
+        setOpenAnswer={(id, value) => setOpenAnswers((prev) => ({ ...prev, [id]: value }))}
+        name={name}
+        setName={setName}
+        ok={canProceed()}
+        onNext={handleNext}
+        onBack={handleBack}
+        onOpenTrainerLogin={() => setView("trainer-login")}
+      />
+    </ThemeProvider>
   );
 }
