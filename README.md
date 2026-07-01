@@ -21,7 +21,7 @@ npm run build    # Production-Build
 
 Benötigte Umgebungsvariablen (siehe `.env.example`):
 
-```
+```text
 GOOGLE_APPS_SCRIPT_URL   # Google Apps Script Endpoint
 TRAINER_PASSWORD         # Passwort für den Trainer-Bereich
 ```

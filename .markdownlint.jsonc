@@ -1,0 +1,5 @@
+{
+  // Doku-Dateien (CLAUDE.md/AGENTS.md/README.md) nutzen bewusst lange,
+  // beschreibende Zeilen statt hartem Umbruch bei 80 Zeichen.
+  "MD013": false
+}
