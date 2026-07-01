@@ -157,6 +157,26 @@ npm run gas:deploy   # bestehendes Web-App-Deployment auf die neue Version heben
 - `gas/Code.js` schreibt header-basiert in den Tab „Feedback": Werte werden über die Spaltennamen der Kopfzeile zugeordnet, fehlende Spalten automatisch rechts ergänzt. Die `FEEDBACK_HEADERS`-Liste muss zum Spalten-Mapping in `lib/appsScript.ts` passen
 - GAS-Antworten dürfen im Erfolgsfall **nie** `error`/`exception`/HTML enthalten – `submitFeedback()` wertet das als Fehlschlag
 
+## Verknüpfung mit dem Agile Heroes OS
+
+Die Feedback App ist im internen Tool-Katalog des Agile Heroes OS gelistet:
+- **OS-Repo:** https://github.com/MariusSuessmilch/ah-ai-os
+- **Katalogeintrag:** `src/data/tools.ts` (Tool mit slug `feedback-app`)
+
+**Wann den OS-Katalog nachziehen?**
+Nicht bei jedem Commit – nur wenn Änderungen die sichtbaren Features der App betreffen:
+- Neue Ausbildung oder neues Modul hinzugefügt
+- Neues Feature (neuer Exporttyp, neuer Filter, neue Funktion im Wizard)
+- Version oder relevante Beschreibung hat sich geändert
+
+**Was dann zu tun ist:**
+1. `~/Workspace/ah-ai-os/` klonen bzw. pullen (Repo: https://github.com/MariusSuessmilch/ah-ai-os)
+2. Neuen Branch erstellen
+3. Im Katalogeintrag der Feedback App `version`, `updatedAt`, `description`, `inputs`, `outputs` anpassen
+4. Branch pushen, PR gegen `master` öffnen
+
+Reine Bug-Fixes, Styling-Tweaks oder interne Refactors erfordern **kein** OS-Update.
+
 ## Claudian-Update-Format
 
 Am Ende jeder Session eine kurze Zusammenfassung ausgeben:
