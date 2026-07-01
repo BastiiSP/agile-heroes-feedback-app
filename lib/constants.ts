@@ -25,6 +25,7 @@ export const SYCO_MODULES = [
 
 // Module der Agile Coach Ausbildung (ACA) – Agile Heroes GmbH.
 export const ACA_MODULES = [
+  "Einstiegsmodul",
   "Agile Coach Fundamentals",
   "Agile Facilitation",
   "Trainings- und Workshopdesign",
