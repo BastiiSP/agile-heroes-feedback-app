@@ -42,62 +42,22 @@ const DARK: Rgb = [33, 33, 33];
 const MUTED: Rgb = [120, 120, 120];
 const LIGHT_LINE: Rgb = [229, 231, 235];
 
-// Das Logo-SVG liegt auf einem A4-Artboard mit fest eingebautem dunklen
-// Hintergrund und viel Leerraum: erst rastern, dann auf das eigentliche Icon
-// zuschneiden (Pixel, die von der Hintergrundfarbe abweichen) – mit etwas
-// dunklem Rand bleibt ein kompaktes Badge übrig. Fällt bei jedem Fehler auf
-// das Text-Wordmark zurück.
-async function loadLogoPng(): Promise<{ dataUrl: string; ratio: number } | null> {
+// Lädt ein Logo (SVG oder PNG) unskaliert auf einen Canvas, um es als
+// PNG-Data-URL in jsPDF einzubetten (addImage kann kein SVG direkt). Beide
+// verwendeten Dateien sind bereits eng auf den Logo-Inhalt zugeschnitten,
+// daher entfällt ein nachträgliches Zuschneiden.
+async function loadLogoImage(src: string): Promise<{ dataUrl: string; ratio: number } | null> {
   try {
     const img = new Image();
-    img.src = "/agile-heroes-intelligence_logo_rgb.svg";
+    img.src = src;
     await img.decode();
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(img.naturalWidth * 2);
-    canvas.height = Math.round(img.naturalHeight * 2);
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    // Hintergrundfarbe aus der Ecke ablesen; alles, was deutlich abweicht
-    // (oder transparent ist, falls das Logo ohne Hintergrund kommt), zählt
-    // als Logo-Inhalt für die Bounding-Box.
-    const [bgR, bgG, bgB, bgA] = [data[0], data[1], data[2], data[3]];
-    const isContent = (i: number) => {
-      if (bgA < 8) return data[i + 3] > 8;
-      return (
-        Math.abs(data[i] - bgR) + Math.abs(data[i + 1] - bgG) + Math.abs(data[i + 2] - bgB) > 40 ||
-        Math.abs(data[i + 3] - bgA) > 40
-      );
-    };
-    let minX = width, minY = height, maxX = -1, maxY = -1;
-    for (let py = 0; py < height; py++) {
-      for (let px = 0; px < width; px++) {
-        if (isContent((py * width + px) * 4)) {
-          if (px < minX) minX = px;
-          if (px > maxX) maxX = px;
-          if (py < minY) minY = py;
-          if (py > maxY) maxY = py;
-        }
-      }
-    }
-    if (maxX < 0) return null;
-
-    // Etwas Hintergrund als Rand stehen lassen, damit das Badge ruhig wirkt.
-    const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.1);
-    minX = Math.max(0, minX - pad);
-    minY = Math.max(0, minY - pad);
-    maxX = Math.min(width - 1, maxX + pad);
-    maxY = Math.min(height - 1, maxY + pad);
-
-    const trimmed = document.createElement("canvas");
-    trimmed.width = maxX - minX + 1;
-    trimmed.height = maxY - minY + 1;
-    trimmed
-      .getContext("2d")!
-      .drawImage(canvas, minX, minY, trimmed.width, trimmed.height, 0, 0, trimmed.width, trimmed.height);
-    return { dataUrl: trimmed.toDataURL("image/png"), ratio: trimmed.width / trimmed.height };
+    return { dataUrl: canvas.toDataURL("image/png"), ratio: canvas.width / canvas.height };
   } catch {
     return null;
   }
@@ -158,27 +118,35 @@ export async function exportFeedbackPdf(
 
   const { jsPDF: JsPdf } = await import("jspdf");
   const { autoTable } = await import("jspdf-autotable");
-  const logo = await loadLogoPng();
+  const [ahiLogo, ahgLogo] = await Promise.all([
+    loadLogoImage("/agile-heroes-intelligence-logo-pdf.svg"),
+    loadLogoImage("/agile-heroes-logo.png"),
+  ]);
 
   const doc = new JsPdf({ unit: "mm", format: "a4" });
   let y = 0;
 
-  // Kopf (Logo-Badge + Wordmark + Teal-Linie) auf jeder Seite – spiegelt den
-  // App-Header (Icon links, zweizeiliger Schriftzug daneben).
+  // Kopf (beide Marken-Logos + Wordmark + Teal-Linie) auf jeder Seite –
+  // spiegelt DualLogo.tsx (AHI + AHG nebeneinander, ein Wordmark), da der
+  // Export beide Marken/Ausbildungen abdeckt.
   const drawHeader = () => {
-    let textX = MARGIN;
-    if (logo) {
-      const lh = 13;
-      const lw = lh * logo.ratio;
-      doc.addImage(logo.dataUrl, "PNG", MARGIN, 7.5, lw, lh);
-      textX = MARGIN + lw + 4;
+    let logoX = MARGIN;
+    const lh = 13;
+    if (ahiLogo) {
+      const lw = lh * ahiLogo.ratio;
+      doc.addImage(ahiLogo.dataUrl, "PNG", logoX, 7.5, lw, lh);
+      logoX += lw + 3.5;
     }
+    if (ahgLogo) {
+      const lw = lh * ahgLogo.ratio;
+      doc.addImage(ahgLogo.dataUrl, "PNG", logoX, 7.5, lw, lh);
+      logoX += lw + 3.5;
+    }
+    const textX = logoX === MARGIN ? MARGIN : logoX + 0.5;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...DARK);
-    doc.text("AGILE HEROES", textX, 12.5, { charSpace: 0.4 });
-    doc.setTextColor(...TEAL);
-    doc.text("INTELLIGENCE", textX, 17.5, { charSpace: 0.4 });
+    doc.text("AGILE HEROES", textX, 15.5, { charSpace: 0.4 });
     doc.setDrawColor(...TEAL);
     doc.setLineWidth(0.6);
     doc.line(MARGIN, 24, PAGE_W - MARGIN, 24);
