@@ -160,17 +160,20 @@ npm run gas:deploy   # bestehendes Web-App-Deployment auf die neue Version heben
 ## Verknüpfung mit dem Agile Heroes OS
 
 Die Feedback App ist im internen Tool-Katalog des Agile Heroes OS gelistet:
-- **OS-Repo:** https://github.com/MariusSuessmilch/ah-ai-os
+
+- **OS-Repo:** <https://github.com/MariusSuessmilch/ah-ai-os>
 - **Katalogeintrag:** `src/data/tools.ts` (Tool mit slug `feedback-app`)
 
 **Wann den OS-Katalog nachziehen?**
 Nicht bei jedem Commit – nur wenn Änderungen die sichtbaren Features der App betreffen:
+
 - Neue Ausbildung oder neues Modul hinzugefügt
 - Neues Feature (neuer Exporttyp, neuer Filter, neue Funktion im Wizard)
 - Version oder relevante Beschreibung hat sich geändert
 
 **Was dann zu tun ist:**
-1. `~/Workspace/ah-ai-os/` klonen bzw. pullen (Repo: https://github.com/MariusSuessmilch/ah-ai-os)
+
+1. `~/Workspace/ah-ai-os/` klonen bzw. pullen (Repo: <https://github.com/MariusSuessmilch/ah-ai-os>)
 2. Neuen Branch erstellen
 3. Im Katalogeintrag der Feedback App `version`, `updatedAt`, `description`, `inputs`, `outputs` anpassen
 4. Branch pushen, PR gegen `master` öffnen
