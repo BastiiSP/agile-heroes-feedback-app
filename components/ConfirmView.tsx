@@ -35,7 +35,7 @@ export default function ConfirmView({
           Du kannst auch nochmal zurückgehen und etwas anpassen.
         </p>
         <p style={{ fontSize: "13px", color: C.muted, lineHeight: "1.6", maxWidth: "400px", margin: error ? "0 auto 20px" : "0 auto 40px" }}>
-          Mit dem Absenden stimmst du zu, dass dein Feedback inklusive deiner Freitext-Antworten an die Trainer:innen weitergegeben wird – anonym, sofern du keinen Namen angegeben hast.
+          Mit Klick auf „Feedback absenden“ stimmst du zu, dass dein Feedback an die Trainer:innen weitergegeben werden kann.
         </p>
         {error && (
           <p style={{ fontSize: "15px", color: C.pink, fontWeight: 700, lineHeight: "1.6", maxWidth: "400px", margin: "0 auto 28px" }}>
