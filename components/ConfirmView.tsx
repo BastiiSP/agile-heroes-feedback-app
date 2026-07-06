@@ -31,8 +31,11 @@ export default function ConfirmView({
         <p style={{ fontSize: "16px", color: C.muted, lineHeight: "1.7", maxWidth: "400px", margin: "0 auto 16px" }}>
           Dein Feedback ist vollständig. Ein Klick, und du machst die Ausbildung besser.
         </p>
-        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.2)", marginBottom: error ? "20px" : "40px" }}>
+        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.2)", marginBottom: "16px" }}>
           Du kannst auch nochmal zurückgehen und etwas anpassen.
+        </p>
+        <p style={{ fontSize: "13px", color: C.muted, lineHeight: "1.6", maxWidth: "400px", margin: error ? "0 auto 20px" : "0 auto 40px" }}>
+          Mit dem Absenden stimmst du zu, dass dein Feedback inklusive deiner Freitext-Antworten an die Trainer:innen weitergegeben wird – anonym, sofern du keinen Namen angegeben hast.
         </p>
         {error && (
           <p style={{ fontSize: "15px", color: C.pink, fontWeight: 700, lineHeight: "1.6", maxWidth: "400px", margin: "0 auto 28px" }}>
