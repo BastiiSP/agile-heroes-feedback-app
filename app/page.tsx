@@ -111,9 +111,11 @@ export default function Page() {
     setSelectedModule((prev) => (prev === m ? "" : m));
   };
 
+  // Sterne-Änderung lässt den Follow-up-Text bewusst unangetastet: Auch wenn
+  // sich dadurch die angezeigte Follow-up-Frage ändert (low/mid/high), bleibt
+  // die Eingabe erhalten. Geleert wird nur durch den User selbst oder resetForm.
   const handleRateChange = (id: RatingId, value: number) => {
     setRatings((prev) => ({ ...prev, [id]: value }));
-    setFollowUps((prev) => ({ ...prev, [id]: "" }));
   };
 
   const handleSubmit = async () => {
