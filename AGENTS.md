@@ -1,8 +1,15 @@
-# Agile Heroes Feedback App – Projektkontext für Codex
+# Agile Heroes Feedback App – Projektanweisungen
 
 ## Was ist dieses Projekt?
 
-Eine Feedback-App für Trainings und Ausbildungen bei Agile Heroes Intelligence. Teilnehmer wählen zuerst ihre **Ausbildung** (aktuell *KI-Manager Ausbildung / KIMA* mit Modulen und *AI Automation Engineer / AIAE* ohne Module) und geben dann Feedback zu Inhalten, Didaktik, Gestaltung und Trainer. Die Ergebnisse sind über einen passwortgeschützten Trainer-Bereich einsehbar.
+Eine Feedback-App für Trainings und Ausbildungen. Teilnehmer wählen zuerst ihre **Ausbildung** und geben dann Feedback zu Inhalten, Didaktik, Gestaltung und Trainer. Die Ergebnisse sind über einen passwortgeschützten Trainer-Bereich einsehbar.
+
+Aktuell vier Ausbildungen, je mit einer **Markenzugehörigkeit** (`brand` in `PROGRAMS`):
+
+- **Agile Heroes Intelligence (`brand: "ahi"`)** – *KI-Manager / KIMA* (mit Modulen), *AI Automation Engineer / AIAE* (ohne Module).
+- **Agile Heroes GmbH (`brand: "ahg"`)** – *Systemische Business Coach / SyCo* und *Agile Coach / ACA* (beide mit Modulen).
+
+Der Teilnehmer-Wizard erscheint je nach `brand` im AHI- oder im GmbH-Corporate-Design (siehe „Marken-Theming"). Dashboard & Login behalten die AHI-**Farben**, zeigen aber – wie der Startbildschirm ohne Auswahl – **beide** Marken-Logos (`DualLogo`).
 
 **GitHub:** <https://github.com/BastiiSP/agile-heroes-feedback-app>
 **Trainerpasswort:** liegt als Umgebungsvariable `TRAINER_PASSWORD` (nicht im Code).
@@ -37,31 +44,6 @@ TRAINER_PASSWORD         – Passwort für den Trainer-Bereich
 
 `.env.example` (committed) dokumentiert die nötigen Keys. **Niemals** mit `NEXT_PUBLIC_` prefixen – sonst landen sie im Browser.
 
-## Projektstruktur
-
-```text
-app/
-  layout.tsx          # html lang=de, Nunito-Font, Favicon, globals.css
-  page.tsx            # 'use client' Orchestrator: view-State + Wizard-/Trainer-Logik, ruft /api/*
-  globals.css         # Reset, body, focus/hover, @keyframes spin/pulse
-  icon.svg            # Favicon (AHI-Logo)
-  api/
-    trainers/route.ts  feedback/route.ts  trainer/route.ts
-components/           # Screen, MeshBg, NetworkLines, TrainerIcon, StarRating, ProgressBar, TopicNav, AHILogo,
-                      # FeedbackWizard, TrainerPicker, ConfirmView, ThanksView, TrainerLogin, TrainerDashboard
-lib/
-  constants.ts   # MODULES, PROGRAMS (KIMA/AIAE inkl. eigener Fragesätze), Step-Typen + buildSteps(),
-                 # phaseOf()/phaseColor()/stepColorForKind(), C (Farben)
-  styles.ts      # geteilte Inline-Style-Objekte
-  types.ts       # FeedbackEntry, FeedbackItem (inkl. ausbildung), Ratings, FollowUps, OpenAnswers
-  appsScript.ts  # server-only: getTrainers/submitFeedback/loadFeedback inkl. dt. Spalten-Mapping
-gas/
-  Code.js        # Google-Apps-Script-Quellcode (doGet: submit/getTrainers/Lesepfad), via clasp synchronisiert
-  appsscript.json  # GAS-Manifest (Webapp: ANYONE_ANONYMOUS, V8)
-.clasp.json      # clasp-Konfiguration (Script-ID + rootDir gas/)
-public/ahi-logo.svg  # Logo für den Header
-```
-
 ## App-Struktur
 
 **Views** (`view`-State in `app/page.tsx`): `form` | `confirm` | `thanks` | `trainer-login` | `trainer`.
@@ -75,20 +57,39 @@ public/ahi-logo.svg  # Logo für den Header
 - `open` (×3): Offene Fragen aus `program.openQuestions`
 - `name`: Name eingeben (optional) → confirm → thanks
 
-Eigene Module/Module für AIAE später = `modules`-Array in `PROGRAMS` füllen, sonst nichts. Die `TopicNav` (Themen-Leiste) und `ProgressBar` leiten sich beide aus dem `steps`-Array + `phaseOf()` ab. Bewertungs-/Fragetexte sind pro Ausbildung in `lib/constants.ts` definiert (`KIMA_RATINGS`/`KIMA_OPEN` vs. `AIAE_RATINGS`/`AIAE_OPEN`); die IDs bleiben identisch, nur die Anzeigetexte unterscheiden sich.
+Die `TopicNav` (Themen-Leiste) und `ProgressBar` leiten sich beide aus dem `steps`-Array + `phaseOf()` ab. Bewertungs-/Fragetexte sind pro Ausbildung in `lib/constants.ts` definiert (`KIMA_RATINGS`/`KIMA_OPEN` etc.); die `RatingId`s/`OpenQuestionId`s bleiben über **alle** Ausbildungen identisch, nur die Anzeigetexte unterscheiden sich. SyCo/ACA wiederverwenden `KIMA_RATINGS` und haben eigene `SYCO_MODULES`/`ACA_MODULES` + `SYCO_OPEN`/`ACA_OPEN`.
+
+**Neue Ausbildung hinzufügen:** Eintrag in `PROGRAMS` (`id`, `label`, `brand`, `modules`, `ratings`, `openQuestions`). Solange dieselben `RatingId`s/`OpenQuestionId`s genutzt werden, **kein GAS-/Sheet-Change nötig** (Spalten-Vertrag bleibt intakt). Der Modul-Schritt entsteht automatisch, wenn `modules.length > 0`.
+
+> ⚠️ **Gotcha:** Der Modul-Schritt im `FeedbackWizard` rendert die Module der **gewählten** Ausbildung (`currentProgram.modules`), **nicht** die globale `MODULES`-Konstante. `MODULES` ist nur die KIMA-Liste – sie hier zu verwenden zeigt allen anderen Ausbildungen die falschen Module.
 
 ## Design-System
 
 **Farben (`C`-Objekt in `lib/constants.ts`):**
 
-- `C.pink` (#db73a6) – Primärfarbe, Sterne, Akzente
-- `C.teal` (#87cdcb) – Sekundärfarbe, Labels, Kurs-Buttons
-- `C.gold` (#e8c07a) – offene Fragen
-- `C.dark` (#212121) – Hintergrund
-- `C.text` (#f0f0f0) – Text
+- `C.pink` (#db73a6) – AHI rating-Phase, Sterne, Akzente
+- `C.teal` (#87cdcb) – AHI setup-Phase, Labels, Kurs-Buttons
+- `C.gold` (#e8c07a) – AHI reflexion-Phase, offene Fragen
+- `C.green`/`C.yellow`/`C.orange` (#cde86a / #fcd600 / #feaf48) – GmbH-Kernfarben (setup/reflexion/rating)
+- `C.dark` (#212121) – Hintergrund · `C.text` (#f0f0f0) – Text
 
-**Font:** Nunito (Google Fonts via `<link>` in `app/layout.tsx`)
+**Font:** Nunito (Google Fonts via `<link>` in `app/layout.tsx`) – für beide Marken gleich.
 **Stil:** Dark Mode, abgerundete Buttons, animierter Mesh-Hintergrund (dekorativ, nicht anfassen)
+
+### Marken-Theming (AHI vs. AHG)
+
+Der Wizard wird per **React-Context** gethemt – **nicht** über harte `C`-Farben in den Komponenten:
+
+- `lib/theme.ts`: `Theme` (3 Phasenfarben setup/rating/reflexion + Logo + Mesh-Gradient), `AHI_THEME`/`AHG_THEME`, `phaseColorT(theme, phase)`, `themeForProgramId(id)`.
+- `components/ThemeContext.tsx`: `ThemeProvider` + `useTheme()`. **Default-Wert = `AHI_THEME`** → Komponenten ohne Provider (Dashboard, Login) bleiben automatisch AHI.
+- `app/page.tsx` umschließt **nur** die Teilnehmer-Views (`form`/`confirm`/`thanks`) mit `<ThemeProvider value={themeForProgramId(selectedProgram)}>`. Die Trainer-Views (`trainer-login`/`trainer`) bleiben bewusst **ohne** Provider.
+- Wizard-Komponenten (`FeedbackWizard`, `MeshBg`, `AHILogo`, `StarRating`, `ProgressBar`, `TopicNav`, `ConfirmView`, `ThanksView`) lesen Farben/Logo via `useTheme()`.
+- `lib/styles.ts`: `modBtn(sel, color?)`, `taStyle(highlight, color?)`, `btnPrimary(color)` sind farbparametrisiert; **Default-Argumente reproduzieren exakt das alte AHI-Aussehen**. `textOn(color)` wählt dunklen Text auf hellen Markenfarben (Gold/Grün/Gelb/Orange), sonst weiß.
+- GmbH-Logo: `public/agile-heroes-logo.png` (rundes Piktogramm, ohne „INTELLIGENCE"-Unterzeile). AHI-Logo: `public/ahi-logo.svg`.
+- `components/DualLogo.tsx`: beide Embleme + ein „AGILE HEROES"-Wortzug (themeless). Verwendet im Startbildschirm (Programm-Schritt ohne Auswahl) und auf den Trainer-Seiten (`TrainerLogin`, `TrainerDashboard`).
+- UX: Erneuter Klick auf eine bereits gewählte Ausbildung/Modul **wählt sie ab** (`handleSelectProgram`/`handleSelectModule` in `app/page.tsx` togglen).
+
+**Beim Anfassen des Wizards:** neue Farben aus `useTheme()` beziehen, keine `C.pink`/`C.teal`/`C.gold` hartcodieren – sonst bricht das GmbH-Theme.
 
 ## Was nicht angefasst werden darf
 
@@ -106,7 +107,7 @@ npm run dev      # http://localhost:3000
 npm run build    # Production-Build prüfen
 ```
 
-Deployment: committen und pushen – Vercel deployt automatisch aus dem GitHub-Repo. Env-Variablen müssen in den Vercel-Project-Settings gesetzt sein.
+Ein autorisierter Push löst das automatische Vercel-Deployment aus. Env-Variablen müssen in den Vercel-Project-Settings gesetzt sein.
 
 ## GAS-Entwicklung mit clasp
 
@@ -125,21 +126,58 @@ npm run gas:deploy   # bestehendes Web-App-Deployment auf die neue Version heben
 
 - `gas:deploy` nutzt fest `clasp deploy -i <Deployment-ID>` und aktualisiert damit das **bestehende** Deployment – die `/exec`-URL (= `GOOGLE_APPS_SCRIPT_URL`) bleibt stabil. **Niemals** `clasp deploy` ohne `-i` bzw. `clasp create-deployment` nutzen, das erzeugt eine neue URL
 - `clasp push` allein reicht **nicht** – die Web-App serviert eine feste Version, erst `gas:deploy` macht Änderungen live
-- Auth: einmalig `npx clasp login` (Browser-OAuth mit dem Google-Konto, dem das Script gehört: `ki.manager.tools@gmail.com`); Credentials liegen in `~/.clasprc.json`, nie im Repo
+- Auth: einmalig `npx clasp login` (Browser-OAuth mit dem berechtigten Script-Eigentümerkonto); Credentials liegen in `~/.clasprc.json`, nie im Repo
 - `gas/Code.js` schreibt header-basiert in den Tab „Feedback": Werte werden über die Spaltennamen der Kopfzeile zugeordnet, fehlende Spalten automatisch rechts ergänzt. Die `FEEDBACK_HEADERS`-Liste muss zum Spalten-Mapping in `lib/appsScript.ts` passen
 - GAS-Antworten dürfen im Erfolgsfall **nie** `error`/`exception`/HTML enthalten – `submitFeedback()` wertet das als Fehlschlag
 
-## Claudian-Update-Format
+## Verknüpfung mit dem Agile Heroes OS
 
-Am Ende jeder Session eine kurze Zusammenfassung ausgeben:
+Die Feedback App ist im internen Tool-Katalog des Agile Heroes OS gelistet:
 
+- **OS-Repo:** separater berechtigter Checkout des internen OS.
+- **Katalogeintrag:** `src/data/tools.ts` (Tool mit slug `feedback-app`)
+
+**Wann den OS-Katalog nachziehen?**
+Nicht bei jedem Commit – nur wenn Änderungen die sichtbaren Features der App betreffen:
+
+- Neue Ausbildung oder neues Modul hinzugefügt
+- Neues Feature (neuer Exporttyp, neuer Filter, neue Funktion im Wizard)
+- Version oder relevante Beschreibung hat sich geändert
+
+**Was dann zu tun ist:**
+
+1. Den berechtigten lokalen OS-Checkout aktualisieren
+2. Neuen Branch erstellen
+3. Im Katalogeintrag der Feedback App `version`, `updatedAt`, `description`, `inputs`, `outputs` anpassen
+4. Branch pushen, PR gegen `master` öffnen
+
+Reine Bug-Fixes, Styling-Tweaks oder interne Refactors erfordern **kein** OS-Update.
+
+
+Der Katalog-Workflow gilt bei beauftragten fachlichen Featureänderungen; reine Anweisungspflege löst kein externes Update aus. Dieses Repository ist öffentlich: keine personenbezogenen Daten, Kundendaten oder Zugangsdaten in Anweisungen und Diffs aufnehmen.
+
+## Pflege dieses Dateipaars
+
+Direkte aktuelle Nutzeraufträge haben Vorrang. Vor Regeländerungen beide Dateien lesen und Unterschiede inhaltlich zusammenführen; gültige Regeln erhalten. AGENTS.md und CLAUDE.md unmittelbar gemeinsam ändern und danach mit `cmp` auf Bytegleichheit prüfen. Anbieterunterschiede ausdrücklich kennzeichnen und in beiden Dateien führen. Codex lädt AGENTS.md; Claude Code lädt bei diesem Paar CLAUDE.md.
+
+## Abschluss: Claudian-Update
+
+Nach jeder erledigten Implementierungsaufgabe dieses Format mit tatsächlichen Ergebnissen ausgeben; es ersetzt keine unabhängige Prüfung:
 ```text
-## Was wurde gemacht
-[Was konkret implementiert oder geändert wurde]
+## Claudian-Update – [Datum]
 
-## Offene Punkte
-[Was noch aussteht oder bekannte Einschränkungen]
+### Implementiert
+- [Was gebaut / geändert wurde]
 
-## Zum Testen
-[Wie man die Änderungen manuell testen kann]
+### Getestet
+- [Was getestet wurde und Ergebnis]
+
+### Zum Testen
+- [Konkrete manuelle Schritte und Erwartung]
+
+### Offen / Nächster Block
+- [Was als nächstes kommt]
+
+### Technische Notizen
+- [Wichtige Entscheidungen, neue Pakete, IDs etc.]
 ```

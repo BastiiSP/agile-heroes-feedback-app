@@ -1,4 +1,4 @@
-# Agile Heroes Feedback App – Projektkontext für Claude Code
+# Agile Heroes Feedback App – Projektanweisungen
 
 ## Was ist dieses Projekt?
 
@@ -43,33 +43,6 @@ TRAINER_PASSWORD         – Passwort für den Trainer-Bereich
 ```
 
 `.env.example` (committed) dokumentiert die nötigen Keys. **Niemals** mit `NEXT_PUBLIC_` prefixen – sonst landen sie im Browser.
-
-## Projektstruktur
-
-```text
-app/
-  layout.tsx          # html lang=de, Nunito-Font, Favicon, globals.css
-  page.tsx            # 'use client' Orchestrator: view-State + Wizard-/Trainer-Logik, ruft /api/*
-  globals.css         # Reset, body, focus/hover, @keyframes spin/pulse
-  icon.svg            # Favicon (AHI-Logo)
-  api/
-    trainers/route.ts  feedback/route.ts  trainer/route.ts
-components/           # Screen, MeshBg, NetworkLines, TrainerIcon, StarRating, ProgressBar, TopicNav, AHILogo,
-                      # FeedbackWizard, TrainerPicker, ConfirmView, ThanksView, TrainerLogin, TrainerDashboard,
-                      # ThemeContext (ThemeProvider + useTheme, Default AHI)
-lib/
-  constants.ts   # MODULES + SYCO_/ACA_MODULES, PROGRAMS (4 Ausbildungen inkl. brand + eigener Fragesätze),
-                 # BrandKey, Step-Typen + buildSteps(), phaseOf()/phaseColor(), C (Farben inkl. GmbH)
-  theme.ts       # Theme/AHI_THEME/AHG_THEME, phaseColorT(), themeForProgramId() – Marken-Theming
-  styles.ts      # geteilte Inline-Style-Objekte (farbparametrisiert) + textOn()
-  types.ts       # FeedbackEntry, FeedbackItem (inkl. ausbildung), Ratings, FollowUps, OpenAnswers
-  appsScript.ts  # server-only: getTrainers/submitFeedback/loadFeedback inkl. dt. Spalten-Mapping
-gas/
-  Code.js        # Google-Apps-Script-Quellcode (doGet: submit/getTrainers/Lesepfad), via clasp synchronisiert
-  appsscript.json  # GAS-Manifest (Webapp: ANYONE_ANONYMOUS, V8)
-.clasp.json      # clasp-Konfiguration (Script-ID + rootDir gas/)
-public/ahi-logo.svg  # Logo für den Header
-```
 
 ## App-Struktur
 
@@ -134,7 +107,7 @@ npm run dev      # http://localhost:3000
 npm run build    # Production-Build prüfen
 ```
 
-Deployment: committen und pushen – Vercel deployt automatisch aus dem GitHub-Repo. Env-Variablen müssen in den Vercel-Project-Settings gesetzt sein.
+Ein autorisierter Push löst das automatische Vercel-Deployment aus. Env-Variablen müssen in den Vercel-Project-Settings gesetzt sein.
 
 ## GAS-Entwicklung mit clasp
 
@@ -153,7 +126,7 @@ npm run gas:deploy   # bestehendes Web-App-Deployment auf die neue Version heben
 
 - `gas:deploy` nutzt fest `clasp deploy -i <Deployment-ID>` und aktualisiert damit das **bestehende** Deployment – die `/exec`-URL (= `GOOGLE_APPS_SCRIPT_URL`) bleibt stabil. **Niemals** `clasp deploy` ohne `-i` bzw. `clasp create-deployment` nutzen, das erzeugt eine neue URL
 - `clasp push` allein reicht **nicht** – die Web-App serviert eine feste Version, erst `gas:deploy` macht Änderungen live
-- Auth: einmalig `npx clasp login` (Browser-OAuth mit dem Google-Konto, dem das Script gehört: `ki.manager.tools@gmail.com`); Credentials liegen in `~/.clasprc.json`, nie im Repo
+- Auth: einmalig `npx clasp login` (Browser-OAuth mit dem berechtigten Script-Eigentümerkonto); Credentials liegen in `~/.clasprc.json`, nie im Repo
 - `gas/Code.js` schreibt header-basiert in den Tab „Feedback": Werte werden über die Spaltennamen der Kopfzeile zugeordnet, fehlende Spalten automatisch rechts ergänzt. Die `FEEDBACK_HEADERS`-Liste muss zum Spalten-Mapping in `lib/appsScript.ts` passen
 - GAS-Antworten dürfen im Erfolgsfall **nie** `error`/`exception`/HTML enthalten – `submitFeedback()` wertet das als Fehlschlag
 
@@ -161,7 +134,7 @@ npm run gas:deploy   # bestehendes Web-App-Deployment auf die neue Version heben
 
 Die Feedback App ist im internen Tool-Katalog des Agile Heroes OS gelistet:
 
-- **OS-Repo:** <https://github.com/MariusSuessmilch/ah-ai-os>
+- **OS-Repo:** separater berechtigter Checkout des internen OS.
 - **Katalogeintrag:** `src/data/tools.ts` (Tool mit slug `feedback-app`)
 
 **Wann den OS-Katalog nachziehen?**
@@ -173,24 +146,38 @@ Nicht bei jedem Commit – nur wenn Änderungen die sichtbaren Features der App 
 
 **Was dann zu tun ist:**
 
-1. `~/Workspace/ah-ai-os/` klonen bzw. pullen (Repo: <https://github.com/MariusSuessmilch/ah-ai-os>)
+1. Den berechtigten lokalen OS-Checkout aktualisieren
 2. Neuen Branch erstellen
 3. Im Katalogeintrag der Feedback App `version`, `updatedAt`, `description`, `inputs`, `outputs` anpassen
 4. Branch pushen, PR gegen `master` öffnen
 
 Reine Bug-Fixes, Styling-Tweaks oder interne Refactors erfordern **kein** OS-Update.
 
-## Claudian-Update-Format
 
-Am Ende jeder Session eine kurze Zusammenfassung ausgeben:
+Der Katalog-Workflow gilt bei beauftragten fachlichen Featureänderungen; reine Anweisungspflege löst kein externes Update aus. Dieses Repository ist öffentlich: keine personenbezogenen Daten, Kundendaten oder Zugangsdaten in Anweisungen und Diffs aufnehmen.
 
+## Pflege dieses Dateipaars
+
+Direkte aktuelle Nutzeraufträge haben Vorrang. Vor Regeländerungen beide Dateien lesen und Unterschiede inhaltlich zusammenführen; gültige Regeln erhalten. AGENTS.md und CLAUDE.md unmittelbar gemeinsam ändern und danach mit `cmp` auf Bytegleichheit prüfen. Anbieterunterschiede ausdrücklich kennzeichnen und in beiden Dateien führen. Codex lädt AGENTS.md; Claude Code lädt bei diesem Paar CLAUDE.md.
+
+## Abschluss: Claudian-Update
+
+Nach jeder erledigten Implementierungsaufgabe dieses Format mit tatsächlichen Ergebnissen ausgeben; es ersetzt keine unabhängige Prüfung:
 ```text
-## Was wurde gemacht
-[Was konkret implementiert oder geändert wurde]
+## Claudian-Update – [Datum]
 
-## Offene Punkte
-[Was noch aussteht oder bekannte Einschränkungen]
+### Implementiert
+- [Was gebaut / geändert wurde]
 
-## Zum Testen
-[Wie man die Änderungen manuell testen kann]
+### Getestet
+- [Was getestet wurde und Ergebnis]
+
+### Zum Testen
+- [Konkrete manuelle Schritte und Erwartung]
+
+### Offen / Nächster Block
+- [Was als nächstes kommt]
+
+### Technische Notizen
+- [Wichtige Entscheidungen, neue Pakete, IDs etc.]
 ```
