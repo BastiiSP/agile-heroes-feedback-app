@@ -32,6 +32,7 @@ export const ACA_MODULES = [
   "Coaching Skills",
   "Agile Transformation",
   "OKR",
+  "Scrum Master/Product Owner",
 ] as const;
 
 export type RatingId = "inhalt" | "didaktik" | "gestaltung" | "trainer";
